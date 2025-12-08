@@ -31,3 +31,13 @@ export async function loginUser(email: string, password: string) {
 export async function logoutUser() {
   await api.post("/logout"); // you can create a logout endpoint that deletes cookie
 }
+
+export const fetchMyPosts = async () => {
+  try {
+    const response = await api.get("/me/posts"); 
+    return response.data;
+  } catch (err) {
+    console.error("Failed to fetch posts:", err);
+    throw err;
+  }
+};
