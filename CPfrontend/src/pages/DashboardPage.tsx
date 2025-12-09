@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCurrentUser, fetchMyPosts, api } from "../api/auth";
+import { uploadImage } from "../api/post"; // upload helper
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ export default function Dashboard() {
   const [message, setMessage] = useState("");
   const [postContent, setPostContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   if (isLoading) {
     return (
@@ -30,15 +33,13 @@ export default function Dashboard() {
   }
 
   if (!user) {
-        // If not logged in, redirect to login
     navigate("/login");
     return null;
   }
 
-    // Optional logout function
   const handleLogout = async () => {
     try {
-      await api.post("/logout"); // optional backend endpoint to delete cookie
+      await api.post("/logout");
       setMessage("Logged out successfully!");
       setTimeout(() => navigate("/"), 1000);
     } catch {
@@ -46,26 +47,61 @@ export default function Dashboard() {
     }
   };
 
- const handleCreatePost = async () => {
-  if (!postContent.trim()) return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setSelectedFile(e.target.files[0]);
+      // optional local preview before upload
+      setImageUrl(URL.createObjectURL(e.target.files[0]));
+    }
+  };
 
-  try {
-    // ✅ Create a new post for the current user
-    await api.post("/me/posts", {
-      content: postContent,
-      image_url: imageUrl || null,
-    });
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(selectedFile);
+      setImageUrl(url);
+      setMessage("Image uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to upload image.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
-    setPostContent("");
-    setImageUrl("");
+  const handleCreatePost = async () => {
+    if (!postContent.trim()) return;
 
-    // Refresh post list
-    await queryClient.invalidateQueries({ queryKey: ["myPosts"] });
-  } catch (err) {
-    console.error(err);
-    setMessage("Failed to create post.");
-  }
-};
+    try {
+      await api.post("/me/posts", {
+        content: postContent,
+        image_url: imageUrl || null,
+      });
+
+      setPostContent("");
+      setImageUrl("");
+      setSelectedFile(null);
+
+      await queryClient.invalidateQueries({ queryKey: ["myPosts"] });
+      setMessage("Post created!");
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to create post.");
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    try {
+      await api.delete(`/me/posts/${postId}`);
+      await queryClient.invalidateQueries({ queryKey: ["myPosts"] });
+      setMessage("Post deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to delete post.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
@@ -113,12 +149,32 @@ export default function Dashboard() {
             onChange={(e) => setPostContent(e.target.value)}
             rows={3}
           />
+
           <input
-            className="w-full p-2 border rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Optional image URL"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="mb-2"
           />
+          <button
+            onClick={handleUpload}
+            disabled={!selectedFile || uploading}
+            className="mb-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            {uploading ? "Uploading..." : "Upload Image"}
+          </button>
+
+          {imageUrl && (
+            <div className="mb-2">
+              <p className="text-sm text-gray-600">Image ready to post:</p>
+              <img
+                src={imageUrl}
+                alt="Preview"
+                className="rounded max-h-48 w-full object-cover mt-1"
+              />
+            </div>
+          )}
+
           <button
             onClick={handleCreatePost}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -137,18 +193,26 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-4">
               {posts.map((post: any) => (
-                <div key={post.id} className="p-4 bg-white border rounded shadow">
+                <div key={post.id} className="p-4 bg-white border rounded shadow relative">
                   <p className="mb-2">{post.content}</p>
                   {post.image_url && (
                     <img
                       src={post.image_url}
-                      alt=""
+                      alt="Post Image"
                       className="rounded max-h-60 w-full object-cover mt-2"
                     />
                   )}
                   <p className="text-sm text-gray-400 mt-2">
                     {new Date(post.created_at).toLocaleString()}
                   </p>
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={() => handleDeletePost(post.id)}
+                    className="absolute top-2 right-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                  >
+                    Delete
+                  </button>
                 </div>
               ))}
             </div>
