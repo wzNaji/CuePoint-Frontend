@@ -7,3 +7,16 @@ export const postsAPI = {
   deletePost: (id: number) =>
     axios.delete(`/me/posts/${id}`).then(res => res.data),
 };
+
+export const uploadImage = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await axios.post("http://localhost:8000/upload-image", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data.image_url;
+};
