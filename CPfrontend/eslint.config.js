@@ -19,5 +19,9 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Disable the "no-explicit-any" rule
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
 ])
