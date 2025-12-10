@@ -197,6 +197,7 @@ export default function Dashboard() {
             <p>Email: {user.email}</p>
             <p>Display Name: {user.display_name}</p>
             <p>Verified: {user.is_verified ? "✅" : "❌"}</p>
+            <p>Bio: {user.bio}</p>
           </div>
           <div className="p-4 border rounded bg-green-50 flex flex-col justify-between">
             <h2 className="font-semibold mb-2">Actions</h2>
