@@ -28,19 +28,22 @@ function PostForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setSelectedFile(e.target.files[0]);
-      setImageUrl(URL.createObjectURL(e.target.files[0])); // preview only
+      // Local preview
+      setImageUrl(URL.createObjectURL(e.target.files[0]));
     }
   };
 
   const handleSave = async () => {
+    if (!content.trim()) return;
+
     let finalImageUrl = imageUrl;
 
-    // Upload file to R2 if selected
+    // Upload the file if one is selected
     if (selectedFile && setUploading) {
       setUploading(true);
       try {
         const uploadedUrl = await uploadImage(selectedFile);
-        finalImageUrl = uploadedUrl;
+        finalImageUrl = uploadedUrl; // Use the R2 public URL
         setImageUrl(finalImageUrl);
       } catch (err) {
         console.error(err);
@@ -52,8 +55,9 @@ function PostForm({
       }
     }
 
-    if (!content.trim()) return;
     onSubmit(content, finalImageUrl);
+
+    // Reset form
     setContent("");
     setSelectedFile(null);
     setImageUrl("");
@@ -76,6 +80,7 @@ function PostForm({
       />
       {imageUrl && (
         <div className="mb-2">
+          <p className="text-sm text-gray-600">Preview:</p>
           <img
             src={imageUrl}
             alt="Preview"
@@ -179,11 +184,13 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
+        {/* Header */}
         <div className="bg-white rounded shadow p-6 mb-6">
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
           <p className="text-lg">Welcome back, {user.display_name} 👋</p>
         </div>
 
+        {/* Profile + Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="p-4 border rounded bg-blue-50">
             <h2 className="font-semibold mb-2">Profile</h2>
