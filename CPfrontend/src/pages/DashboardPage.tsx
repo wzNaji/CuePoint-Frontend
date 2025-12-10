@@ -13,7 +13,14 @@ interface PostFormProps {
   setUploading?: (value: boolean) => void;
 }
 
-function PostForm({ initialContent = "", initialImageUrl = "", onSubmit, onCancel, uploading, setUploading }: PostFormProps) {
+function PostForm({
+  initialContent = "",
+  initialImageUrl = "",
+  onSubmit,
+  onCancel,
+  uploading,
+  setUploading,
+}: PostFormProps) {
   const [content, setContent] = useState(initialContent);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(initialImageUrl);
@@ -21,27 +28,32 @@ function PostForm({ initialContent = "", initialImageUrl = "", onSubmit, onCance
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setSelectedFile(e.target.files[0]);
-      setImageUrl(URL.createObjectURL(e.target.files[0]));
+      setImageUrl(URL.createObjectURL(e.target.files[0])); // preview only
     }
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile || !setUploading) return;
-    setUploading(true);
-    try {
-      const url = await uploadImage(selectedFile);
-      setImageUrl(url);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to upload image.");
-    } finally {
-      setUploading(false);
-    }
-  };
+  const handleSave = async () => {
+    let finalImageUrl = imageUrl;
 
-  const handleSubmit = () => {
+    // Upload file to R2 if selected
+    if (selectedFile && setUploading) {
+      setUploading(true);
+      try {
+        const uploadedUrl = await uploadImage(selectedFile);
+        finalImageUrl = uploadedUrl;
+        setImageUrl(finalImageUrl);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to upload image.");
+        setUploading(false);
+        return;
+      } finally {
+        setUploading(false);
+      }
+    }
+
     if (!content.trim()) return;
-    onSubmit(content, imageUrl);
+    onSubmit(content, finalImageUrl);
     setContent("");
     setSelectedFile(null);
     setImageUrl("");
@@ -62,13 +74,6 @@ function PostForm({ initialContent = "", initialImageUrl = "", onSubmit, onCance
         onChange={handleFileChange}
         className="mb-2"
       />
-      <button
-        onClick={handleUpload}
-        disabled={!selectedFile || uploading}
-        className="mb-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-      >
-        {uploading ? "Uploading..." : "Upload Image"}
-      </button>
       {imageUrl && (
         <div className="mb-2">
           <img
@@ -80,7 +85,8 @@ function PostForm({ initialContent = "", initialImageUrl = "", onSubmit, onCance
       )}
       <div className="flex space-x-2">
         <button
-          onClick={handleSubmit}
+          onClick={handleSave}
+          disabled={uploading}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           {onCancel ? "Save" : "Post"}
@@ -114,7 +120,6 @@ export default function Dashboard() {
 
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
-
   const [editingPost, setEditingPost] = useState<any | null>(null);
 
   if (isLoading) return <p>Loading...</p>;
@@ -144,17 +149,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeletePost = async (postId: number) => {
-    try {
-      await api.delete(`/me/posts/${postId}`);
-      await queryClient.invalidateQueries({ queryKey: ["myPosts"] });
-      setMessage("Post deleted successfully!");
-    } catch (err) {
-      console.error(err);
-      setMessage("Failed to delete post.");
-    }
-  };
-
   const handleEditPost = async (content: string, imageUrl: string) => {
     if (!editingPost) return;
     try {
@@ -168,6 +162,17 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       setMessage("Failed to update post.");
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    try {
+      await api.delete(`/me/posts/${postId}`);
+      await queryClient.invalidateQueries({ queryKey: ["myPosts"] });
+      setMessage("Post deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to delete post.");
     }
   };
 
@@ -225,7 +230,10 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-4">
               {posts.map((post: any) => (
-                <div key={post.id} className="p-4 bg-white border rounded shadow relative">
+                <div
+                  key={post.id}
+                  className="p-4 bg-white border rounded shadow relative"
+                >
                   {editingPost?.id === post.id ? (
                     <PostForm
                       initialContent={post.content}

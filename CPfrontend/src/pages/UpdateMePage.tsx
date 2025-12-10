@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/auth";
 
@@ -14,9 +14,19 @@ export default function UpdateMePage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
-  // Profile state
-  const [email, setEmail] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  // Fetch user
+  const { data: user, isLoading } = useQuery<UserOut>({
+    queryKey: ["me"],
+    queryFn: async () => {
+      const res = await api.get("/me");
+      return res.data;
+    },
+    retry: false,
+  });
+
+  // Profile state (initialized from user)
+  const [email, setEmail] = useState(user?.email || "");
+  const [displayName, setDisplayName] = useState(user?.display_name || "");
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -28,23 +38,6 @@ export default function UpdateMePage() {
   // Messages
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // Fetch user
-  const { data: user, isLoading } = useQuery<UserOut>({
-    queryKey: ["me"],
-    queryFn: async () => {
-      const res = await api.get("/me");
-      return res.data;
-    },
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (user) {
-      setEmail(user.email);
-      setDisplayName(user.display_name);
-    }
-  }, [user]);
 
   // ===== Mutations =====
   const updateProfileMutation = useMutation({
