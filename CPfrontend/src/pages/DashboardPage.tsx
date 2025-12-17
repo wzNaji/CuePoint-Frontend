@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchCurrentUser, fetchMyPosts, api } from "../api/auth";
+import { fetchCurrentUser, fetchMyPosts } from "../api/auth";
 import { uploadImage } from "../api/post";
 import { useNavigate } from "react-router-dom";
+import { uploadProfileImage } from "../api/user"; // Import the function here
+import { api } from "../api/axios";
 
 interface PostFormProps {
   initialContent?: string;
@@ -73,15 +75,15 @@ function PostForm({
         rows={3}
       />
       <input
-      id="file-upload"
-      type="file"
-      accept="image/*"
-      onChange={handleFileChange}
-      className="hidden"
+        id="file-upload-post"
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
       />
 
       <label
-        htmlFor="file-upload"
+        htmlFor="file-upload-post"
         className="inline-block px-4 py-2 bg-green-200 text-gray-700 rounded cursor-pointer hover:bg-gray-300"
       >
         Upload Image
@@ -194,6 +196,22 @@ export default function Dashboard() {
     }
   };
 
+  const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    try {
+      await uploadProfileImage(file); // Now use user data directly from React Query
+    } catch (error) {
+      console.error(error);
+      setMessage("Failed to upload profile image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
@@ -203,33 +221,62 @@ export default function Dashboard() {
           <p className="text-lg">Welcome back, {user.display_name} 👋</p>
         </div>
 
-        {/* Profile + Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="p-4 border rounded bg-blue-50">
-            <h2 className="font-semibold mb-2">Profile</h2>
-            <p>Email: {user.email}</p>
-            <p>Display Name: {user.display_name}</p>
-            <p>Verified: {user.is_verified ? "✅" : "❌"}</p>
-            <p>Bio: {user.bio}</p>
-          </div>
-          <div className="p-4 border rounded bg-green-50 flex flex-col justify-between">
-            <h2 className="font-semibold mb-2">Actions</h2>
-            <button
-              onClick={() => navigate("/me/update")}
-              className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Update Profile
-            </button>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Logout
-            </button>
+        <div className="p-4 border rounded bg-blue-50">
+          <h2 className="font-semibold mb-2">Profile</h2>
+          <p>Email: {user.email}</p>
+          <p>Display Name: {user.display_name}</p>
+          <p>Verified: {user.is_verified ? "✅" : "❌"}</p>
+          <p>Bio: {user.bio}</p>
+
+          {/* Profile Image */}
+          <div className="flex items-center space-x-4 mt-4">
+            <div className="relative">
+              <img
+                src={user.profile_image_url || "/default-avatar.png"}
+                alt="Profile"
+                className="w-20 h-20 object-cover rounded-full border-2 border-gray-300"
+              />
+
+              {/* Edit button for the owner */}
+              {user.id === user.id && (
+                <label
+                  htmlFor="file-upload-profile"
+                  className="absolute bottom-0 right-0 p-1 bg-blue-600 text-white rounded-full cursor-pointer"
+                >
+                  <span className="text-xs">✏️</span>
+                </label>
+              )}
+
+              {/* Hidden file upload input for profile image */}
+              <input
+                id="file-upload-profile"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleProfileImageChange}
+              />
+            </div>
+
+            {/* Actions Section */}
+            <div className="p-4 border rounded bg-green-50 flex flex-col justify-between">
+              <h2 className="font-semibold mb-2">Actions</h2>
+              <button
+                onClick={() => navigate("/me/update")}
+                className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Update Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
-        {message && <p className="mb-4 text-red-500">{message}</p>}
+        {message && <p className="text-red-500">{message}</p>}
 
         {/* Create Post */}
         <div className="bg-white p-4 border rounded shadow mb-6">

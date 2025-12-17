@@ -1,20 +1,21 @@
-import axios from "axios";
+// src/api/post.ts
+import { api } from "./axios";  // Import the centralized axios instance
 
 export const postsAPI = {
-  getMyPosts: () => axios.get("/me/posts").then(res => res.data),
+  getMyPosts: () => api.get("/me/posts").then(res => res.data),  // Use the `api` instance
   createPost: (data: { content: string; image_url?: string }) =>
-    axios.post("/me/posts", data).then(res => res.data),
+    api.post("/me/posts", data).then(res => res.data),  // Use the `api` instance
   deletePost: (id: number) =>
-    axios.delete(`/me/posts/${id}`).then(res => res.data),
+    api.delete(`/me/posts/${id}`).then(res => res.data),  // Use the `api` instance
 };
 
 export const uploadImage = async (file: File): Promise<string> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await axios.post("http://localhost:8000/upload-image", formData, {
+  const response = await api.post("/upload-image", formData, {  // Use the `api` instance
     headers: {
-      "Content-Type": "multipart/form-data",
+      "Content-Type": "multipart/form-data",  // Important for file upload
     },
   });
 

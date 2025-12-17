@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api/auth"; // use the cookie-enabled axios instance
+import { api } from "../api/axios"; 
 import axios from "axios";
 
 
