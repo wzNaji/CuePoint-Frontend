@@ -73,11 +73,24 @@ function PostForm({
         rows={3}
       />
       <input
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="mb-2"
+      id="file-upload"
+      type="file"
+      accept="image/*"
+      onChange={handleFileChange}
+      className="hidden"
       />
+
+      <label
+        htmlFor="file-upload"
+        className="inline-block px-4 py-2 bg-green-200 text-gray-700 rounded cursor-pointer hover:bg-gray-300"
+      >
+        Upload Image
+      </label>
+
+      <p className="text-sm text-gray-500 mt-1">
+        {selectedFile ? selectedFile.name : "No file selected"}
+      </p>
+
       {imageUrl && (
         <div className="mb-2">
           <p className="text-sm text-gray-600">Preview:</p>
