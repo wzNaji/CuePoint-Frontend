@@ -26,24 +26,16 @@ export default function UpdateMePage() {
   });
 
   // ------- FORM STATE -------
-  const [form, setForm] = useState(() => ({
-    email: user?.email || "",
-    display_name: user?.display_name || "",
-    bio: user?.bio || "",
-  }));
+  const [form, setForm] = useState<{ email: string; display_name: string; bio: string } | null>(null);
 
-  // Sync form when user loads safely
+  // Sync form when user loads
   useEffect(() => {
     if (user) {
-      const id = setTimeout(() => {
-        setForm({
-          email: user.email,
-          display_name: user.display_name,
-          bio: user.bio || "",
-        });
-      }, 0);
-
-      return () => clearTimeout(id);
+      setForm({
+        email: user.email,
+        display_name: user.display_name,
+        bio: user.bio || "",
+      });
     }
   }, [user]);
 
@@ -53,19 +45,24 @@ export default function UpdateMePage() {
   const [deletePassword, setDeletePassword] = useState("");
 
   // Messages
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | { msg: string; loc: string[] }[] | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   // ========= MUTATIONS =========
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       if (!form) return;
-      const res = await api.put("/me", form);
+      const payload = {
+        email: form.email,
+        display_name: form.display_name,
+        bio: form.bio || null, // convert empty string to null if needed
+      };
+      const res = await api.put("/me", payload);
       return res.data;
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["currentUser"], data);
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] }); // dashboard cache will refresh
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] }); // refresh dashboard cache
       setSuccess("Profile updated successfully!");
       setError(null);
 
@@ -74,7 +71,8 @@ export default function UpdateMePage() {
       }, 2000);
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Error updating profile");
+      const detail = err.response?.data?.detail;
+      setError(detail || "Error updating profile");
       setSuccess(null);
     },
   });
@@ -98,7 +96,8 @@ export default function UpdateMePage() {
       }, 2000);
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Error changing password");
+      const detail = err.response?.data?.detail;
+      setError(detail || "Error changing password");
       setSuccess(null);
     },
   });
@@ -113,7 +112,8 @@ export default function UpdateMePage() {
       window.location.href = "/login";
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Error deleting account");
+      const detail = err.response?.data?.detail;
+      setError(detail || "Error deleting account");
       setSuccess(null);
     },
   });
@@ -125,7 +125,20 @@ export default function UpdateMePage() {
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-4 text-center">Account Management</h1>
 
-      {error && <div className="text-red-600 mb-4">{error}</div>}
+      {/* ===== Display Errors ===== */}
+      {error && (
+        <div className="text-red-600 mb-4">
+          {Array.isArray(error)
+            ? error.map((e, i) => (
+                <div key={i}>
+                  {e.msg} (field: {e.loc.join(".")})
+                </div>
+              ))
+            : error}
+        </div>
+      )}
+
+      {/* ===== Display Success ===== */}
       {success && <div className="text-green-600 mb-4">{success}</div>}
 
       {/* TABS */}
