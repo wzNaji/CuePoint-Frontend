@@ -5,6 +5,7 @@ import { uploadImage } from "../api/post";
 import { useNavigate } from "react-router-dom";
 import { uploadProfileImage } from "../api/user"; // Import the function here
 import { api } from "../api/axios";
+import FeaturedTracks from "../components/FeaturedTracks";
 
 interface PostFormProps {
   initialContent?: string;
@@ -275,6 +276,9 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        <FeaturedTracks userId={user.id} isOwner={true} />
+
 
         {message && <p className="text-red-500">{message}</p>}
 
