@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { uploadProfileImage } from "../api/user"; // Import the function here
 import { api } from "../api/axios";
 import FeaturedTracks from "../components/FeaturedTracks";
+import EventsSidebar from "../components/EventsSidebar";
+
 
 interface PostFormProps {
   initialContent?: string;
@@ -204,7 +206,7 @@ export default function Dashboard() {
     setUploading(true);
 
     try {
-      await uploadProfileImage(file); // Now use user data directly from React Query
+      await uploadProfileImage(file);
     } catch (error) {
       console.error(error);
       setMessage("Failed to upload profile image.");
@@ -215,140 +217,141 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded shadow p-6 mb-6">
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-lg">Welcome back, {user.display_name} 👋</p>
-        </div>
+      <div className="max-w-7xl mx-auto flex gap-6">
+        {/* Main content */}
+        <div className="flex-1">
+          {/* Header */}
+          <div className="bg-white rounded shadow p-6 mb-6">
+            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+            <p className="text-lg">Welcome back, {user.display_name} 👋</p>
+          </div>
 
-        <div className="p-4 border rounded bg-blue-50">
-          <h2 className="font-semibold mb-2">Profile</h2>
-          <p>Email: {user.email}</p>
-          <p>Display Name: {user.display_name}</p>
-          <p>Verified: {user.is_verified ? "✅" : "❌"}</p>
-          <p>Bio: {user.bio}</p>
+          {/* Profile */}
+          <div className="p-4 border rounded bg-blue-50 mb-6">
+            <h2 className="font-semibold mb-2">Profile</h2>
+            <p>Email: {user.email}</p>
+            <p>Display Name: {user.display_name}</p>
+            <p>Verified: {user.is_verified ? "✅" : "❌"}</p>
+            <p>Bio: {user.bio}</p>
 
-          {/* Profile Image */}
-          <div className="flex items-center space-x-4 mt-4">
-            <div className="relative">
-              <img
-                src={user.profile_image_url || "/default-avatar.png"}
-                alt="Profile"
-                className="w-20 h-20 object-cover rounded-full border-2 border-gray-300"
-              />
-
-              {/* Edit button for the owner */}
-              {user.id === user.id && (
+            {/* Profile Image */}
+            <div className="flex items-center space-x-4 mt-4">
+              <div className="relative">
+                <img
+                  src={user.profile_image_url || "/default-avatar.png"}
+                  alt="Profile"
+                  className="w-20 h-20 object-cover rounded-full border-2 border-gray-300"
+                />
                 <label
                   htmlFor="file-upload-profile"
                   className="absolute bottom-0 right-0 p-1 bg-blue-600 text-white rounded-full cursor-pointer"
                 >
                   <span className="text-xs">✏️</span>
                 </label>
-              )}
+                <input
+                  id="file-upload-profile"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleProfileImageChange}
+                />
+              </div>
 
-              {/* Hidden file upload input for profile image */}
-              <input
-                id="file-upload-profile"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleProfileImageChange}
-              />
+              {/* Actions Section */}
+              <div className="p-4 border rounded bg-green-50 flex flex-col justify-between">
+                <h2 className="font-semibold mb-2">Actions</h2>
+                <button
+                  onClick={() => navigate("/me/update")}
+                  className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Update Profile
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
+          </div>
 
-            {/* Actions Section */}
-            <div className="p-4 border rounded bg-green-50 flex flex-col justify-between">
-              <h2 className="font-semibold mb-2">Actions</h2>
-              <button
-                onClick={() => navigate("/me/update")}
-                className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Update Profile
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Logout
-              </button>
-            </div>
+          {/* Featured Tracks */}
+          <FeaturedTracks userId={user.id} isOwner={true} />
+
+          {message && <p className="text-red-500">{message}</p>}
+
+          {/* Create Post */}
+          <div className="bg-white p-4 border rounded shadow mb-6">
+            <h2 className="text-2xl font-bold mb-4">Create a Post</h2>
+            <PostForm
+              onSubmit={handleCreatePost}
+              uploading={uploading}
+              setUploading={setUploading}
+            />
+          </div>
+
+          {/* Posts List */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-4">Your Updates</h2>
+            {postsLoading ? (
+              <p>Loading your posts...</p>
+            ) : posts?.length === 0 ? (
+              <p className="text-gray-500">You haven't posted anything yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post: any) => (
+                  <div
+                    key={post.id}
+                    className="p-4 bg-white border rounded shadow relative"
+                  >
+                    {editingPost?.id === post.id ? (
+                      <PostForm
+                        initialContent={post.content}
+                        initialImageUrl={post.image_url || ""}
+                        onSubmit={handleEditPost}
+                        onCancel={() => setEditingPost(null)}
+                        uploading={uploading}
+                        setUploading={setUploading}
+                      />
+                    ) : (
+                      <>
+                        <p className="mb-2">{post.content}</p>
+                        {post.image_url && (
+                          <img
+                            src={post.image_url}
+                            alt="Post Image"
+                            className="rounded max-h-60 w-full object-cover mt-2"
+                          />
+                        )}
+                        <p className="text-sm text-gray-400 mt-2">
+                          {new Date(post.created_at).toLocaleString()}
+                        </p>
+                        <div className="absolute top-2 right-2 flex space-x-2">
+                          <button
+                            onClick={() => setEditingPost(post)}
+                            className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeletePost(post.id)}
+                            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        <FeaturedTracks userId={user.id} isOwner={true} />
-
-
-        {message && <p className="text-red-500">{message}</p>}
-
-        {/* Create Post */}
-        <div className="bg-white p-4 border rounded shadow mb-6">
-          <h2 className="text-2xl font-bold mb-4">Create a Post</h2>
-          <PostForm
-            onSubmit={handleCreatePost}
-            uploading={uploading}
-            setUploading={setUploading}
-          />
-        </div>
-
-        {/* Posts List */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Your Updates</h2>
-          {postsLoading ? (
-            <p>Loading your posts...</p>
-          ) : posts?.length === 0 ? (
-            <p className="text-gray-500">You haven't posted anything yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {posts.map((post: any) => (
-                <div
-                  key={post.id}
-                  className="p-4 bg-white border rounded shadow relative"
-                >
-                  {editingPost?.id === post.id ? (
-                    <PostForm
-                      initialContent={post.content}
-                      initialImageUrl={post.image_url || ""}
-                      onSubmit={handleEditPost}
-                      onCancel={() => setEditingPost(null)}
-                      uploading={uploading}
-                      setUploading={setUploading}
-                    />
-                  ) : (
-                    <>
-                      <p className="mb-2">{post.content}</p>
-                      {post.image_url && (
-                        <img
-                          src={post.image_url}
-                          alt="Post Image"
-                          className="rounded max-h-60 w-full object-cover mt-2"
-                        />
-                      )}
-                      <p className="text-sm text-gray-400 mt-2">
-                        {new Date(post.created_at).toLocaleString()}
-                      </p>
-                      <div className="absolute top-2 right-2 flex space-x-2">
-                        <button
-                          onClick={() => setEditingPost(post)}
-                          className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeletePost(post.id)}
-                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Sidebar */}
+        <EventsSidebar userId={user.id} isOwner={true} />
       </div>
     </div>
   );
