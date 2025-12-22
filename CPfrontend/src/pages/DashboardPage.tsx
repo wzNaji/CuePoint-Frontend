@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCurrentUser, fetchMyPosts } from "../api/auth";
 import { uploadImage } from "../api/post";
 import { useNavigate } from "react-router-dom";
-import { uploadProfileImage } from "../api/user"; // Import the function here
+import { uploadProfileImage } from "../api/user";
 import { api } from "../api/axios";
 import FeaturedTracks from "../components/FeaturedTracks";
 import EventsSidebar from "../components/EventsSidebar";
@@ -265,6 +265,13 @@ export default function Dashboard() {
                   className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                   Update Profile
+                </button>
+                {/* View Bookings Button */}
+                <button
+                  onClick={() => navigate(`/users/${user.id}/bookings`)}
+                  className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  View Bookings
                 </button>
                 <button
                   onClick={handleLogout}
