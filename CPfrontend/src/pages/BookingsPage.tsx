@@ -17,12 +17,10 @@ export default function BookingsPage() {
 
   // Fetch bookings for THIS calendar owner
   const { data: bookings = [], isLoading, isError } = useQuery<Booking[]>({
-    queryKey: ["bookings", calendarOwnerId],
+    queryKey: ["my-bookings"],
     queryFn: () =>
       api
-        .get("/bookings", {
-          params: { user_id: calendarOwnerId },
-        })
+        .get("/bookings")
         .then((res) => res.data),
   });
 
