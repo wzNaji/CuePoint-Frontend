@@ -9,20 +9,37 @@ import type { Booking } from "../types/booking";
 
 export default function BookingsPage() {
   const { userId } = useParams();
-  const calendarOwnerId = Number(userId); // 🔴 SOURCE OF TRUTH
+  const calendarOwnerId = Number(userId);
   const queryClient = useQueryClient();
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
-  // Fetch bookings for THIS calendar owner
+  // Multi-toggle state
+  const [showReceived, setShowReceived] = useState(true);  // bookings requested of me
+  const [showRequested, setShowRequested] = useState(true); // bookings I requested
+
+  // Fetch bookings
   const { data: bookings = [], isLoading, isError } = useQuery<Booking[]>({
-    queryKey: ["my-bookings"],
+    queryKey: ["bookings", calendarOwnerId],
     queryFn: () =>
       api
-        .get("/bookings")
+        .get("/bookings", { params: { user_id: calendarOwnerId } })
         .then((res) => res.data),
   });
+
+  const { data: calendarOwner } = useQuery({
+  queryKey: ["user", calendarOwnerId],
+  queryFn: () => api.get(`/users/${calendarOwnerId}`).then(res => res.data),
+  });
+
+
+  // Filter based on toggles
+  const filteredBookings = bookings.filter(
+    (b) =>
+      (showReceived && b.recipient_id === calendarOwnerId) ||
+      (showRequested && b.requester_id === calendarOwnerId)
+  );
 
   const createBookingMutation = useMutation({
     mutationFn: (data: {
@@ -32,51 +49,15 @@ export default function BookingsPage() {
       location: string | null;
       note: string | null;
       recipient_id: number;
-    }) =>
-      api.post("/bookings", data).then((res) => res.data),
-
-    onMutate: async (newBooking) => {
-      await queryClient.cancelQueries({ queryKey: ["my-bookings"] });
-
-      const previous = queryClient.getQueryData<Booking[]>(["my-bookings"]) ?? [];
-
-      const optimisticBooking: Booking = {
-        id: Date.now(), // temp id
-        requester_id: -1, // will be replaced
-        recipient_id: newBooking.recipient_id,
-        date: newBooking.date,
-        start_time: newBooking.start_time,
-        end_time: newBooking.end_time,
-        fee: null,
-        location: newBooking.location,
-        status: "requested",
-        note: newBooking.note,
-        created_at: new Date().toISOString(),
-      };
-
-      queryClient.setQueryData<Booking[]>(["my-bookings"], [
-        ...previous,
-        optimisticBooking,
-      ]);
-
-      return { previous };
-    },
-
-    onError: (_err, _newBooking, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["my-bookings"], context.previous);
-      }
-    },
-
+    }) => api.post("/bookings", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings", calendarOwnerId] });
       setSelectedDate(null);
     },
   });
 
-
   const handleSelectDate = (date: string) => {
-    setSelectedBooking(null); // ⛔ prevent conflict
+    setSelectedBooking(null);
     setSelectedDate(date);
   };
 
@@ -104,13 +85,30 @@ export default function BookingsPage() {
     <div>
       <h1>Bookings</h1>
 
+      {/* Multi-toggle buttons */}
+      <div className="mb-4 flex gap-2">
+        <button
+          onClick={() => setShowReceived((prev) => !prev)}
+          className={`px-3 py-1 rounded ${
+            showReceived ? "bg-blue-600 text-white" : "border"
+          }`}
+        >
+          Bookings I am requesting of {calendarOwner?.display_name}
+        </button>
+        <button
+          onClick={() => setShowRequested((prev) => !prev)}
+          className={`px-3 py-1 rounded ${
+            showRequested ? "bg-blue-600 text-white" : "border"
+          }`}
+        >
+          Bookings I been requested to
+        </button>
+      </div>
+
       <BookingCalendar
-        bookings={bookings}
+        bookings={filteredBookings}
         onSelectDate={handleSelectDate}
-        onSelectBooking={(booking) => {
-          setSelectedDate(null); // ⛔ prevent conflict
-          setSelectedBooking(booking);
-        }}
+        onSelectBooking={(booking) => setSelectedBooking(booking)}
       />
 
       {selectedDate && (
