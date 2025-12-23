@@ -1,52 +1,13 @@
-// src/pages/LandingPage.tsx
-import { useState, useEffect } from "react";
-import { api } from "../api/axios";
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCurrentUser } from "../api/auth";
-
-interface PublicProfile {
-  id: number;
-  display_name: string;
-  bio?: string;
-  profile_image_url?: string;
-}
+import { Link } from "react-router-dom";
+import SearchBar from "../components/SearchBar";
 
 export default function LandingPage() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
   });
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState<PublicProfile[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch profiles when searchQuery changes
-  useEffect(() => {
-    if (!searchQuery) {
-      setResults([]);
-      return;
-    }
-
-    const fetchProfiles = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get("/profiles", { params: { q: searchQuery } });
-        setResults(res.data);
-      } catch (err) {
-        console.error("Search failed:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const timeout = setTimeout(() => {
-      fetchProfiles();
-    }, 300);
-
-    return () => clearTimeout(timeout);
-  }, [searchQuery]);
 
   if (userLoading) {
     return (
@@ -78,40 +39,8 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* Search bar */}
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search by display name..."
-        className="w-full max-w-md p-3 border rounded mb-6 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-
-      {loading && <p>Searching...</p>}
-      {!loading && results.length === 0 && searchQuery && (
-        <p className="text-gray-500">No DJs found.</p>
-      )}
-
-      {/* Search results */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
-        {results.map((profile) => (
-          <Link
-            key={profile.id}
-            to={`/profiles/${profile.id}`}
-            className="bg-white p-4 rounded shadow hover:shadow-lg transition flex flex-col items-center"
-          >
-            <img
-              src={profile.profile_image_url || "/default-avatar.png"}
-              alt={profile.display_name}
-              className="w-24 h-24 rounded-full object-cover mb-3"
-            />
-            <h2 className="text-xl font-semibold">{profile.display_name}</h2>
-            {profile.bio && (
-              <p className="text-gray-500 text-sm mt-1">{profile.bio}</p>
-            )}
-          </Link>
-        ))}
-      </div>
+      {/* Reusable Search Bar */}
+      <SearchBar />
     </div>
   );
 }
