@@ -2,14 +2,15 @@ import {
   Calendar,
   dateFnsLocalizer,
   type SlotInfo,
+  type View,
 } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import type { Booking } from "../types/booking";
+import { useState } from "react";
 
 const locales = { "en-US": enUS };
-
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -37,6 +38,8 @@ export default function BookingCalendar({
   onSelectDate,
   onSelectBooking,
 }: BookingCalendarProps) {
+  const [view, setView] = useState<View>("month");
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const events: BookingEvent[] = bookings.map((b) => ({
     title: b.location ?? "Booking request",
     start: new Date(`${b.date}T${b.start_time ?? "00:00"}`),
@@ -46,7 +49,7 @@ export default function BookingCalendar({
   }));
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
-    const date = slotInfo.start.toISOString().split("T")[0];
+    const date = format(slotInfo.start, "yyyy-MM-dd");
     onSelectDate(date);
   };
 
@@ -60,6 +63,12 @@ export default function BookingCalendar({
       onSelectSlot={handleSelectSlot}
       onSelectEvent={(event) => onSelectBooking(event.booking)}
       defaultView="month"
+      dayLayoutAlgorithm="no-overlap"
+      popup
+      view={view}                 
+      onView={(v) => setView(v)}
+      date={currentDate}
+      onNavigate={(newDate) => setCurrentDate(newDate)}
       style={{ height: 600 }}
     />
   );

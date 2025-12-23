@@ -30,7 +30,7 @@ export default function BookingRequestForm({
           start_time: startTime,
           end_time: endTime,
           fee,
-          location,
+          location: location.trim() || "Unknown Location",
           note,
         });
       }}

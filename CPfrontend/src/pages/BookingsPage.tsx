@@ -32,14 +32,48 @@ export default function BookingsPage() {
       location: string | null;
       note: string | null;
       recipient_id: number;
-    }) => api.post("/bookings", data),
+    }) =>
+      api.post("/bookings", data).then((res) => res.data),
+
+    onMutate: async (newBooking) => {
+      await queryClient.cancelQueries({ queryKey: ["my-bookings"] });
+
+      const previous = queryClient.getQueryData<Booking[]>(["my-bookings"]) ?? [];
+
+      const optimisticBooking: Booking = {
+        id: Date.now(), // temp id
+        requester_id: -1, // will be replaced
+        recipient_id: newBooking.recipient_id,
+        date: newBooking.date,
+        start_time: newBooking.start_time,
+        end_time: newBooking.end_time,
+        fee: null,
+        location: newBooking.location,
+        status: "requested",
+        note: newBooking.note,
+        created_at: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<Booking[]>(["my-bookings"], [
+        ...previous,
+        optimisticBooking,
+      ]);
+
+      return { previous };
+    },
+
+    onError: (_err, _newBooking, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["my-bookings"], context.previous);
+      }
+    },
+
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["bookings", calendarOwnerId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
       setSelectedDate(null);
     },
   });
+
 
   const handleSelectDate = (date: string) => {
     setSelectedBooking(null); // ⛔ prevent conflict
