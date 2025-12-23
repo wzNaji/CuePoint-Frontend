@@ -49,6 +49,8 @@ export default function BookingDetailsModal({
           <p>
             <strong>Date:</strong> {booking.date}
           </p>
+          <p><strong>Requester:</strong> {booking.requester_displayname}</p>
+          <p><strong>Recipient:</strong> {booking.recipient_displayname}</p>
           <p>
             <strong>Time:</strong>{" "}
             {booking.start_time ?? "All day"}
