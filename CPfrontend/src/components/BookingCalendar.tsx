@@ -62,14 +62,24 @@ export default function BookingCalendar({
       selectable
       onSelectSlot={handleSelectSlot}
       onSelectEvent={(event) => onSelectBooking(event.booking)}
-      defaultView="month"
-      dayLayoutAlgorithm="no-overlap"
-      popup
-      view={view}                 
+      view={view}
       onView={(v) => setView(v)}
       date={currentDate}
       onNavigate={(newDate) => setCurrentDate(newDate)}
+      dayLayoutAlgorithm="no-overlap"
+      popup
       style={{ height: 600 }}
+      eventPropGetter={(event) => {
+        let backgroundColor = "#ccc"; // default
+        if (event.booking.status === "requested") backgroundColor = "#facc15"; // yellow
+        if (event.booking.status === "accepted") backgroundColor = "#22c55e"; // green
+        if (event.booking.status === "rejected") backgroundColor = "#ef4444"; // red
+        if (event.booking.status === "cancelled") backgroundColor = "#6b7280"; // gray
+
+        return {
+          style: { backgroundColor, color: "white", borderRadius: "4px", padding: "2px" },
+        };
+      }}
     />
   );
 }

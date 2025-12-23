@@ -7,7 +7,7 @@ import { uploadProfileImage } from "../api/user";
 import { api } from "../api/axios";
 import FeaturedTracks from "../components/FeaturedTracks";
 import EventsSidebar from "../components/EventsSidebar";
-
+import SearchBar from "../components/SearchBar";
 
 interface PostFormProps {
   initialContent?: string;
@@ -297,6 +297,7 @@ export default function Dashboard() {
               setUploading={setUploading}
             />
           </div>
+          <SearchBar />
 
           {/* Posts List */}
           <div className="mb-6">
