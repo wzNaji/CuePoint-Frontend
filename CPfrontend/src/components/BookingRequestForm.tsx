@@ -18,7 +18,7 @@ export default function BookingRequestForm({
 }: BookingRequestFormProps) {
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("21:00");
-  const [fee, setFee] = useState<number | undefined>(100);
+  const [fee, setFee] = useState<number | undefined>();
   const [location, setLocation] = useState("");
   const [note, setNote] = useState("");
 
