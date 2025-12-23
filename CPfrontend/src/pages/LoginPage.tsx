@@ -36,7 +36,7 @@ const LoginPage = () => {
 
       // Redirect after 1 second (optional)
       setTimeout(() => {
-        navigate("/"); // Landing page will now detect user via cookie
+        navigate("/dashboard"); // Landing page will now detect user via cookie
       }, 1000);
 
     } catch (error: unknown) {
