@@ -37,7 +37,7 @@ function PostForm({
   };
 
   const handleSave = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() && !selectedFile && !imageUrl) return; // require either text or image
 
     let finalImageUrl = imageUrl;
 
