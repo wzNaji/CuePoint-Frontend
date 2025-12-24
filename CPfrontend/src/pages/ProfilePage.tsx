@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/axios";
@@ -21,7 +20,7 @@ interface PublicProfile {
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
-  const numericUserId = userId ? parseInt(userId) : undefined;
+  const numericUserId = userId ? Number(userId) : undefined;
   const navigate = useNavigate();
 
   const { data: profile, isLoading: profileLoading } = useQuery<PublicProfile>({
@@ -31,6 +30,7 @@ export default function ProfilePage() {
       const res = await api.get(`/profiles/${numericUserId}`);
       return res.data;
     },
+    enabled: !!numericUserId,
   });
 
   const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
@@ -40,44 +40,47 @@ export default function ProfilePage() {
       const res = await api.get(`/users/${numericUserId}/posts`);
       return res.data;
     },
-    enabled: !!numericUserId, // only fetch if ID is valid
+    enabled: !!numericUserId,
   });
 
-  if (profileLoading) return <p>Loading profile...</p>;
-  if (!profile) return <p>Profile not found.</p>;
+  if (profileLoading) return <p className="p-6">Loading profile...</p>;
+  if (!profile) return <p className="p-6">Profile not found.</p>;
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto flex gap-6">
         {/* Main content */}
         <div className="flex-1">
-          {/* Profile Header */}
+          {/* Profile header */}
           <div className="bg-white rounded shadow p-6 mb-6 flex items-center gap-6">
             <img
               src={profile.profile_image_url || "/default-avatar.png"}
-              alt="Profile"
-              className="w-24 h-24 object-cover rounded-full border-2 border-gray-300"
+              alt={profile.display_name}
+              className="w-24 h-24 rounded-full object-cover border"
             />
+
             <div>
               <h1 className="text-3xl font-bold">{profile.display_name}</h1>
-              <p className="text-gray-600">{profile.bio}</p>
-              {numericUserId && (
-                <button
-                  onClick={() => navigate(`/users/${numericUserId}/bookings`)}
-                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  View Bookings
-                </button>
+              {profile.bio && (
+                <p className="text-gray-600 mt-1">{profile.bio}</p>
               )}
+
+              <button
+                onClick={() => navigate(`/users/${numericUserId}/bookings`)}
+                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                View Bookings
+              </button>
             </div>
           </div>
 
           {/* Featured Tracks */}
-          {numericUserId && <FeaturedTracks userId={numericUserId} isOwner={false} />}
+          <FeaturedTracks userId={numericUserId!} isOwner={false} />
 
           {/* Posts */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold mb-4">Posts</h2>
+
             {postsLoading ? (
               <p>Loading posts...</p>
             ) : posts.length === 0 ? (
@@ -87,6 +90,7 @@ export default function ProfilePage() {
                 {posts.map((post) => (
                   <div key={post.id} className="bg-white p-4 rounded shadow">
                     <p className="mb-2">{post.content}</p>
+
                     {post.image_url && (
                       <img
                         src={post.image_url}
@@ -94,6 +98,7 @@ export default function ProfilePage() {
                         className="rounded max-h-60 w-full object-cover mt-2"
                       />
                     )}
+
                     <p className="text-sm text-gray-400 mt-2">
                       {new Date(post.created_at).toLocaleString()}
                     </p>
@@ -105,7 +110,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Sidebar */}
-        {numericUserId && <EventsSidebar userId={numericUserId} isOwner={false} />}
+        <EventsSidebar userId={numericUserId!} isOwner={false} />
       </div>
     </div>
   );

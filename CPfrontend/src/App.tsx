@@ -1,24 +1,69 @@
 import { Routes, Route } from "react-router-dom";
+import AppLayout from "./layouts/AppLayout";
+
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
-import UpdateMePage from "./pages/UpdateMePage";
 import BookingsPage from "./pages/BookingsPage";
+import UpdateMePage from "./pages/UpdateMePage";
 import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      {/* Public / standalone pages (NO header layout) */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/users/:userId/bookings" element={<BookingsPage />} />
-      <Route path="/me/update" element={<UpdateMePage />} />
-      <Route path="/profiles/:userId" element={<ProfilePage />} />
+
+      {/* Pages WITH global layout */}
+      <Route
+        path="/"
+        element={
+          <AppLayout>
+            <LandingPage />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <AppLayout>
+            <DashboardPage />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/users/:userId/bookings"
+        element={
+          <AppLayout>
+            <BookingsPage />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/me/update"
+        element={
+          <AppLayout>
+            <UpdateMePage />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/profiles/:userId"
+        element={
+          <AppLayout>
+            <ProfilePage />
+          </AppLayout>
+        }
+      />
     </Routes>
   );
 }
 
 export default App;
+
