@@ -36,42 +36,52 @@ export default function SearchBar({ placeholder = "Search by display name..." }:
       }
     };
 
-    const timeout = setTimeout(() => fetchProfiles(), 300);
+    const timeout = setTimeout(fetchProfiles, 300);
     return () => clearTimeout(timeout);
   }, [query]);
 
   return (
-    <div className="w-full max-w-md flex flex-col items-center mb-6">
+    <div className="relative w-full">
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        className="w-full p-3 border rounded mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
 
-      {loading && <p>Searching...</p>}
-      {!loading && results.length === 0 && query && (
-        <p className="text-gray-500">No DJs found.</p>
-      )}
+      {/* DROPDOWN RESULTS */}
+      {query && (
+        <div className="absolute top-full left-0 right-0 bg-white border rounded shadow-lg mt-2 z-50 max-h-80 overflow-y-auto">
+          {loading && <p className="p-3 text-sm text-gray-500">Searching…</p>}
 
-      <div className="grid grid-cols-1 gap-4 w-full">
-        {results.map((profile) => (
-          <Link
-            key={profile.id}
-            to={`/profiles/${profile.id}`}
-            className="bg-white p-4 rounded shadow hover:shadow-lg transition flex flex-col items-center"
-          >
-            <img
-              src={profile.profile_image_url || "/default-avatar.png"}
-              alt={profile.display_name}
-              className="w-24 h-24 rounded-full object-cover mb-3"
-            />
-            <h2 className="text-xl font-semibold">{profile.display_name}</h2>
-            {profile.bio && <p className="text-gray-500 text-sm mt-1">{profile.bio}</p>}
-          </Link>
-        ))}
-      </div>
+          {!loading && results.length === 0 && (
+            <p className="p-3 text-sm text-gray-500">No users found</p>
+          )}
+
+          {results.map((profile) => (
+            <Link
+              key={profile.id}
+              to={`/profiles/${profile.id}`}
+              onClick={() => setQuery("")}
+              className="flex items-center gap-3 p-3 hover:bg-gray-100 transition"
+            >
+              <img
+                src={profile.profile_image_url || "/default-avatar.png"}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <div>
+                <p className="font-medium">{profile.display_name}</p>
+                {profile.bio && (
+                  <p className="text-xs text-gray-500 truncate">
+                    {profile.bio}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -8,33 +8,40 @@ import { api } from "../api/axios";
 import type { Booking } from "../types/booking";
 
 export default function BookingsPage() {
-  const { userId } = useParams();
+  const { userId } = useParams<{ userId: string }>();
   const calendarOwnerId = Number(userId);
   const queryClient = useQueryClient();
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
-  // Multi-toggle state
-  const [showReceived, setShowReceived] = useState(true);  // bookings requested of me
-  const [showRequested, setShowRequested] = useState(true); // bookings I requested
+  // Toggle state
+  const [showReceived, setShowReceived] = useState(true);
+  const [showRequested, setShowRequested] = useState(true);
 
   // Fetch bookings
-  const { data: bookings = [], isLoading, isError } = useQuery<Booking[]>({
+  const {
+    data: bookings = [],
+    isLoading,
+    isError,
+  } = useQuery<Booking[]>({
     queryKey: ["bookings", calendarOwnerId],
     queryFn: () =>
       api
         .get("/bookings", { params: { user_id: calendarOwnerId } })
         .then((res) => res.data),
+    enabled: !isNaN(calendarOwnerId),
   });
 
+  // Fetch calendar owner
   const { data: calendarOwner } = useQuery({
-  queryKey: ["user", calendarOwnerId],
-  queryFn: () => api.get(`/users/${calendarOwnerId}`).then(res => res.data),
+    queryKey: ["user", calendarOwnerId],
+    queryFn: () =>
+      api.get(`/users/${calendarOwnerId}`).then((res) => res.data),
+    enabled: !isNaN(calendarOwnerId),
   });
 
-
-  // Filter based on toggles
+  // Filter bookings
   const filteredBookings = bookings.filter(
     (b) =>
       (showReceived && b.recipient_id === calendarOwnerId) ||
@@ -51,7 +58,9 @@ export default function BookingsPage() {
       recipient_id: number;
     }) => api.post("/bookings", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookings", calendarOwnerId] });
+      queryClient.invalidateQueries({
+        queryKey: ["bookings", calendarOwnerId],
+      });
       setSelectedDate(null);
     },
   });
@@ -78,15 +87,13 @@ export default function BookingsPage() {
     });
   };
 
-  if (isLoading) return <div>Loading bookings...</div>;
-  if (isError) return <div>Failed to load bookings.</div>;
+  if (isLoading) return <p>Loading bookings...</p>;
+  if (isError) return <p>Failed to load bookings.</p>;
 
   return (
-    <div>
-      <h1>Bookings</h1>
-
-      {/* Multi-toggle buttons */}
-      <div className="mb-4 flex gap-2">
+    <div className="space-y-6">
+      {/* Toggle buttons */}
+      <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setShowReceived((prev) => !prev)}
           className={`px-3 py-1 rounded ${
@@ -95,22 +102,25 @@ export default function BookingsPage() {
         >
           Bookings I am requesting of {calendarOwner?.display_name}
         </button>
+
         <button
           onClick={() => setShowRequested((prev) => !prev)}
           className={`px-3 py-1 rounded ${
             showRequested ? "bg-blue-600 text-white" : "border"
           }`}
         >
-          Bookings I been requested to
+          Bookings requested to me
         </button>
       </div>
 
+      {/* Calendar */}
       <BookingCalendar
         bookings={filteredBookings}
         onSelectDate={handleSelectDate}
         onSelectBooking={(booking) => setSelectedBooking(booking)}
       />
 
+      {/* Modals */}
       {selectedDate && (
         <BookingRequestModal
           date={selectedDate}
