@@ -9,7 +9,7 @@ interface Track {
   url: string;
 }
 
-interface FeaturedTracksProps {
+export interface FeaturedTracksProps {
   userId: number;
   isOwner: boolean;
 }

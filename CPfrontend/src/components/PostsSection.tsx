@@ -2,7 +2,7 @@
 import PostForm from "./PostForm";
 import type { Post } from "../types/post";
 
-interface PostsSectionProps {
+export interface PostsSectionProps {
   posts: Post[];
   postsLoading: boolean;
   editingPost: Post | null;

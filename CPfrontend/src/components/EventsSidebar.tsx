@@ -26,7 +26,7 @@ function getDateParts(date: string) {
   };
 }
 
-interface EventsSidebarProps {
+export interface EventsSidebarProps {
   userId: number;      // ID of the profile being viewed
   isOwner: boolean;    // true if viewing your own profile
   maxEvents?: number;

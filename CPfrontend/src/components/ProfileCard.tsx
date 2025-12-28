@@ -1,7 +1,7 @@
 // src/components/ProfileCard.tsx
 import React from "react";
 
-interface ProfileCardProps {
+export interface ProfileCardProps {
   user: any; // or User type
   uploading: boolean;
   onProfileImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
