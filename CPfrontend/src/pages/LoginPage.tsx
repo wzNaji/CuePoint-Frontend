@@ -1,39 +1,33 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api/axios";
 import axios from "axios";
+import { loginUser } from "../api/auth";
+import FormField from "../components/FormField";
+import Message from "../components/Message";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
+    setSuccess(false);
 
     try {
-      await api.post(
-        "/login",
-        new URLSearchParams({
-          username: email,
-          password,
-        }),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      await loginUser(email, password);
 
       setMessage("Login successful!");
+      setSuccess(true);
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 800);
+      setTimeout(() => navigate("/dashboard"), 800);
     } catch (error: unknown) {
+      setSuccess(false);
+
       if (axios.isAxiosError(error) && error.response) {
         setMessage(error.response.data.detail || "Login failed");
       } else {
@@ -48,23 +42,8 @@ const LoginPage = () => {
         <h1 className="text-2xl font-bold mb-4">Login</h1>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="border p-2 rounded"
-          />
+          <FormField type="email" placeholder="Email" value={email} onChange={setEmail} />
+          <FormField type="password" placeholder="Password" value={password} onChange={setPassword} />
 
           <button
             type="submit"
@@ -74,9 +53,7 @@ const LoginPage = () => {
           </button>
         </form>
 
-        {message && (
-          <p className="mt-4 text-sm text-red-500 text-center">{message}</p>
-        )}
+        {message && <Message text={message} success={success} />}
       </div>
     </div>
   );

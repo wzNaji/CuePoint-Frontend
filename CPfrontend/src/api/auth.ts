@@ -1,13 +1,13 @@
 // src/api/auth.ts
-import { api } from "./axios";  // Import the centralized axios instance
+import { api } from "./axios";
 
 // ✅ Fetch current authenticated user from cookie
 export async function fetchCurrentUser() {
   try {
-    const res = await api.get("/me");  // Use the `api` instance
-    return res.data; // user object
+    const res = await api.get("/me");
+    return res.data;
   } catch {
-    return null; // no cookie / invalid token
+    return null;
   }
 }
 
@@ -17,20 +17,34 @@ export async function loginUser(email: string, password: string) {
   form.append("username", email);
   form.append("password", password);
 
-  // cookie will be set automatically by backend
-  const res = await api.post("/login", form);  // Use the `api` instance
+  const res = await api.post("/login", form);
   return res.data;
 }
 
-// ✅ Logout function (optional)
+// ✅ Register function
+export async function registerUser(
+  email: string,
+  displayName: string,
+  password: string
+) {
+  const res = await api.post("/register", {
+    email,
+    display_name: displayName,
+    password,
+  });
+
+  return res.data;
+}
+
+// ✅ Logout function
 export async function logoutUser() {
-  await api.post("/logout");  // You can create a logout endpoint that deletes the cookie
+  await api.post("/logout");
 }
 
 // ✅ Fetch posts from the current user
 export const fetchMyPosts = async () => {
   try {
-    const response = await api.get("/me/posts");  // Use the `api` instance
+    const response = await api.get("/me/posts");
     return response.data;
   } catch (err) {
     console.error("Failed to fetch posts:", err);
