@@ -12,16 +12,28 @@ import ProfilePage from "./pages/ProfilePage";
 function App() {
   return (
     <Routes>
-      {/* Public / standalone pages (NO header layout) */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-
       {/* Pages WITH global layout */}
       <Route
         path="/"
         element={
           <AppLayout>
             <LandingPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <AppLayout>
+            <LoginPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <AppLayout>
+            <RegisterPage />
           </AppLayout>
         }
       />
