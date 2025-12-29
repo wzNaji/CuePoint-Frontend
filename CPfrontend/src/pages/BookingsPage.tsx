@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import BookingCalendar from "../components/BookingCalendar";
 import BookingRequestModal from "../components/BookingRequestModal";
 import BookingDetailsModal from "../components/BookingDetailsModal";
 import { api } from "../api/axios";
+import { fetchCurrentUser } from "../api/auth";
 import type { Booking } from "../types/booking";
 
 export default function BookingsPage() {
@@ -16,38 +17,71 @@ export default function BookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   // Toggle state
-  const [showReceived, setShowReceived] = useState(true);
-  const [showRequested, setShowRequested] = useState(true);
+  const [showMyRequestsToUser, setShowMyRequestsToUser] = useState(false);
+  const [showAllMyRequests, setShowAllMyRequests] = useState(false);
 
-  // Fetch bookings
+  // 🔐 Current logged-in user
+  const { data: currentUser } = useQuery({
+    queryKey: ["me"],
+    queryFn: fetchCurrentUser,
+  });
+
+  const currentUserId = currentUser?.id;
+  const isOwnCalendar = currentUserId === calendarOwnerId;
+
+  // 📅 Fetch bookings (only bookings involving current user)
   const {
     data: bookings = [],
     isLoading,
     isError,
   } = useQuery<Booking[]>({
-    queryKey: ["bookings", calendarOwnerId],
-    queryFn: () =>
-      api
-        .get("/bookings", { params: { user_id: calendarOwnerId } })
-        .then((res) => res.data),
-    enabled: !isNaN(calendarOwnerId),
+    queryKey: ["bookings"],
+    queryFn: () => api.get("/bookings").then((res) => res.data),
+    enabled: !!currentUserId,
   });
 
-  // Fetch calendar owner
+  // 👤 Fetch calendar owner (profile being viewed)
   const { data: calendarOwner } = useQuery({
     queryKey: ["user", calendarOwnerId],
     queryFn: () =>
-      api.get(`/bookings/calendar/${calendarOwnerId}`).then((res) => res.data),
+      api.get(`/me/users/${calendarOwnerId}`).then((res) => res.data),
     enabled: !isNaN(calendarOwnerId),
   });
 
-  // Filter bookings
-  const filteredBookings = bookings.filter(
-    (b) =>
-      (showReceived && b.recipient_id === calendarOwnerId) ||
-      (showRequested && b.requester_id === calendarOwnerId)
-  );
+  // 🎯 Set correct default toggle behavior
+  useEffect(() => {
+    if (!currentUserId || isNaN(calendarOwnerId)) return;
 
+    if (isOwnCalendar) {
+      setShowAllMyRequests(true);
+      setShowMyRequestsToUser(false);
+    } else {
+      setShowAllMyRequests(false);
+      setShowMyRequestsToUser(true);
+    }
+  }, [isOwnCalendar, currentUserId, calendarOwnerId]);
+
+  // 🔎 Filter bookings based on context
+  const filteredBookings = bookings.filter((b) => {
+    if (!currentUserId) return false;
+
+    if (isOwnCalendar) {
+      return (
+        showAllMyRequests &&
+        (b.requester_id === currentUserId ||
+          b.recipient_id === currentUserId)
+      );
+    }
+
+    // Viewing someone else's calendar
+    return (
+      showMyRequestsToUser &&
+      b.requester_id === currentUserId &&
+      b.recipient_id === calendarOwnerId
+    );
+  });
+
+  // ➕ Create booking
   const createBookingMutation = useMutation({
     mutationFn: (data: {
       date: string;
@@ -58,9 +92,7 @@ export default function BookingsPage() {
       recipient_id: number;
     }) => api.post("/bookings", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["bookings", calendarOwnerId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
       setSelectedDate(null);
     },
   });
@@ -94,34 +126,48 @@ export default function BookingsPage() {
     <div className="space-y-6">
       {/* Toggle buttons */}
       <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => setShowReceived((prev) => !prev)}
-          className={`px-3 py-1 rounded ${
-            showReceived ? "bg-blue-600 text-white" : "border"
-          }`}
-        >
-          Bookings I am requesting of {calendarOwner?.display_name}
-        </button>
+        {!isOwnCalendar && (
+          <button
+            onClick={() =>
+              setShowMyRequestsToUser((prev) => !prev)
+            }
+            className={`px-3 py-1 rounded ${
+              showMyRequestsToUser
+                ? "bg-blue-600 text-white"
+                : "border"
+            }`}
+          >
+            My Requests to: {calendarOwner?.display_name}
+          </button>
+        )}
 
-        <button
-          onClick={() => setShowRequested((prev) => !prev)}
-          className={`px-3 py-1 rounded ${
-            showRequested ? "bg-blue-600 text-white" : "border"
-          }`}
-        >
-          Bookings requested to me
-        </button>
+        {isOwnCalendar && (
+          <button
+            onClick={() =>
+              setShowAllMyRequests((prev) => !prev)
+            }
+            className={`px-3 py-1 rounded ${
+              showAllMyRequests
+                ? "bg-blue-600 text-white"
+                : "border"
+            }`}
+          >
+            All My Requests (Sent & Received)
+          </button>
+        )}
       </div>
 
       {/* Calendar */}
       <BookingCalendar
         bookings={filteredBookings}
         onSelectDate={handleSelectDate}
-        onSelectBooking={(booking) => setSelectedBooking(booking)}
+        onSelectBooking={(booking) =>
+          setSelectedBooking(booking)
+        }
       />
 
       {/* Modals */}
-      {selectedDate && (
+      {selectedDate && !isOwnCalendar && (
         <BookingRequestModal
           date={selectedDate}
           onClose={() => setSelectedDate(null)}
