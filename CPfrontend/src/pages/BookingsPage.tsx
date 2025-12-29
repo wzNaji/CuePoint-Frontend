@@ -37,7 +37,7 @@ export default function BookingsPage() {
   const { data: calendarOwner } = useQuery({
     queryKey: ["user", calendarOwnerId],
     queryFn: () =>
-      api.get(`/users/${calendarOwnerId}`).then((res) => res.data),
+      api.get(`/bookings/calendar/${calendarOwnerId}`).then((res) => res.data),
     enabled: !isNaN(calendarOwnerId),
   });
 
