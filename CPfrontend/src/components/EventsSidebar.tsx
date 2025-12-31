@@ -32,6 +32,7 @@ interface EventsSidebarProps {
   isOwner: boolean;
   maxEvents?: number;
 }
+import Message from "./Message"; // make sure to import your Message component
 
 export default function EventsSidebar({
   userId,
@@ -51,7 +52,9 @@ export default function EventsSidebar({
   const [showAdd, setShowAdd] = useState(false);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
-  const [url, setUrl] = useState(""); // new
+  const [url, setUrl] = useState(""); 
+  const [message, setMessage] = useState<string | null>(null); // <-- new
+  const [success, setSuccess] = useState(false); // for Message component styling
 
   const addEventMutation = useMutation({
     mutationFn: async () => {
@@ -64,8 +67,34 @@ export default function EventsSidebar({
       setDate("");
       setUrl("");
       setShowAdd(false);
+      setMessage("Event added successfully!");
+      setSuccess(true);
+      setTimeout(() => setMessage(null), 3000); // hide after 3s
+    },
+    onError: () => {
+      setMessage("Failed to add event.");
+      setSuccess(false);
+      setTimeout(() => setMessage(null), 3000);
     },
   });
+
+  const handleAddEvent = () => {
+    if (!title || !date) {
+      setMessage("Please provide a title and date.");
+      setSuccess(false);
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    if (new Date(date) < new Date()) {
+      setMessage("Events need to be in the future");
+      setSuccess(false);
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    addEventMutation.mutate();
+  };
 
   const deleteEvent = async (id: number) => {
     await api.delete(`/events/${id}`);
@@ -121,13 +150,15 @@ export default function EventsSidebar({
                        focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <button
-            onClick={() => addEventMutation.mutate()}
+            onClick={handleAddEvent} // <-- changed from direct mutate
             className="mt-1 rounded-md bg-gradient-to-r from-indigo-500 to-purple-500
                        text-white text-sm font-medium px-3 py-2
                        hover:opacity-90 transition"
           >
             Add Event
           </button>
+
+          {message && <Message text={message} success={success} />}
         </div>
       )}
 
@@ -169,17 +200,16 @@ export default function EventsSidebar({
           );
 
           // If URL exists, wrap content in a link
-          return event.url ? (
-            <a
-              key={event.id}
-              href={event.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+          const linkUrl = event.url
+            ? event.url
+            : `https://www.residentadvisor.net/events.aspx?search=${encodeURIComponent(
+                event.title
+              )}`;
+
+          return (
+            <a key={event.id} href={linkUrl} target="_blank" rel="noopener noreferrer">
               {content}
             </a>
-          ) : (
-            <div key={event.id}>{content}</div>
           );
         })}
       </div>
