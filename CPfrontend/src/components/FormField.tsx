@@ -14,16 +14,20 @@ export default function FormField({
   error,
 }: FormFieldProps) {
   return (
-    <div>
+    <div className="mb-4">
       <input
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="border p-2 rounded w-full"
+        className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 transition
+          ${error ? "border-red-400 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"}
+          bg-white text-gray-900`}
       />
-      {error && <p className="text-red-500 mt-1">{error}</p>}
+      {error && (
+        <p className="text-red-500 text-sm mt-1">{error}</p>
+      )}
     </div>
   );
 }

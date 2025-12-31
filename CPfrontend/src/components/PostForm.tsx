@@ -32,14 +32,12 @@ export default function PostForm({
   const handleSave = async () => {
     if (!content.trim() && !selectedFile && !imageUrl) return;
 
-    let finalImageUrl = imageUrl;
+    const finalImageUrl = imageUrl;
 
     if (selectedFile && setUploading) {
       setUploading(true);
       try {
-        // if you have a separate upload function, call it here
-        // const uploadedUrl = await uploadImage(selectedFile);
-        // finalImageUrl = uploadedUrl;
+        // upload logic here if needed
       } finally {
         setUploading(false);
       }
@@ -47,59 +45,80 @@ export default function PostForm({
 
     onSubmit(content, finalImageUrl);
 
-    // Reset form
     setContent("");
     setSelectedFile(null);
     setImageUrl("");
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-6 rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+      {/* TEXTAREA */}
       <textarea
-        className="w-full p-2 border rounded mb-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full resize-none rounded-lg border border-gray-300
+                   px-4 py-3 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-indigo-400"
         placeholder="Write something..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
         rows={3}
       />
 
-      <input
-        id="file-upload-post"
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      <label
-        htmlFor="file-upload-post"
-        className="inline-block px-4 py-2 bg-green-200 text-gray-700 rounded cursor-pointer hover:bg-gray-300"
-      >
-        Upload Image
-      </label>
-
+      {/* IMAGE PREVIEW */}
       {imageUrl && (
-        <div className="mb-2 mt-2">
-          <p className="text-sm text-gray-600">Preview:</p>
-          <img src={imageUrl} alt="Preview" className="rounded max-h-48 w-full object-cover" />
+        <div className="mt-3 overflow-hidden rounded-lg border">
+          <img
+            src={imageUrl}
+            alt="Preview"
+            className="max-h-60 w-full object-cover"
+          />
         </div>
       )}
 
-      <div className="flex space-x-2 mt-2">
-        <button
-          onClick={handleSave}
-          disabled={uploading}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          {onCancel ? "Save" : "Post"}
-        </button>
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+      {/* ACTION BAR */}
+      <div className="mt-3 flex items-center justify-between">
+        {/* LEFT ACTIONS */}
+        <div>
+          <input
+            id="file-upload-post"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <label
+            htmlFor="file-upload-post"
+            className="inline-flex items-center gap-2
+                       rounded-lg px-3 py-2 text-sm
+                       border border-gray-300
+                       cursor-pointer hover:bg-gray-100 transition"
           >
-            Cancel
+            🖼 Upload image
+          </label>
+        </div>
+
+        {/* RIGHT ACTIONS */}
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="rounded-lg px-4 py-2 text-sm font-medium
+                         text-gray-600 hover:bg-gray-100 transition"
+            >
+              Cancel
+            </button>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={uploading}
+            className="rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500
+                       px-5 py-2 text-sm font-medium text-white
+                       shadow-sm hover:opacity-90 transition
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {onCancel ? "Save" : "Post"}
           </button>
-        )}
+        </div>
       </div>
     </div>
   );

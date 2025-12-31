@@ -27,21 +27,22 @@ function getDateParts(date: string) {
 }
 
 interface EventsSidebarProps {
-  userId: number;      // ID of the profile being viewed
-  isOwner: boolean;    // true if viewing your own profile
+  userId: number;
+  isOwner: boolean;
   maxEvents?: number;
 }
 
-export default function EventsSidebar({ userId, isOwner, maxEvents = 5 }: EventsSidebarProps) {
+export default function EventsSidebar({
+  userId,
+  isOwner,
+  maxEvents = 5,
+}: EventsSidebarProps) {
   const queryClient = useQueryClient();
 
-  // Fetch events for the specific user
   const { data: events = [] } = useQuery<Event[]>({
     queryKey: ["events", userId],
     queryFn: async () => {
       const res = await api.get(`/events?user_id=${userId}`);
-      console.log("Fetched events for user:", userId, events);
-
       return res.data;
     },
   });
@@ -50,7 +51,6 @@ export default function EventsSidebar({ userId, isOwner, maxEvents = 5 }: Events
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
 
-  // Mutation for adding an event (owner only)
   const addEventMutation = useMutation({
     mutationFn: async () => {
       const res = await api.post("/events", { title, date, location: "" });
@@ -64,84 +64,113 @@ export default function EventsSidebar({ userId, isOwner, maxEvents = 5 }: Events
     },
   });
 
-  // Delete an event (owner only)
   const deleteEvent = async (id: number) => {
     await api.delete(`/events/${id}`);
     queryClient.invalidateQueries({ queryKey: ["events", userId] });
   };
 
-  const upcomingEvents = events.filter((event) => new Date(event.date) >= new Date());
+  const upcomingEvents = events.filter(
+    (event) => new Date(event.date) >= new Date()
+  );
   const displayedEvents = upcomingEvents.slice(0, maxEvents);
 
   return (
-    <aside className="w-72 bg-black text-white p-4 rounded max-h-[400px] overflow-y-auto relative">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">🎟 Events</h3>
+    <aside className="w-72 rounded-xl bg-white shadow-sm border border-gray-200 p-4">
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+          🎟 <span>Upcoming Events</span>
+        </h3>
 
         {isOwner && (
           <button
             onClick={() => setShowAdd(!showAdd)}
-            className="text-green-400 text-sm font-bold px-2 py-1 rounded hover:bg-green-700 hover:text-white"
-            title="Add Event"
+            className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition"
           >
-            + Add
+            {showAdd ? "Cancel" : "+ Add"}
           </button>
         )}
       </div>
 
+      {/* ADD EVENT */}
       {showAdd && isOwner && (
-        <div className="mb-4 flex flex-col gap-1 bg-gray-800 p-2 rounded">
+        <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-2">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title"
-            className="p-1 text-black text-sm rounded w-full"
+            placeholder="Event title"
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="p-1 text-black text-sm rounded w-full"
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+
           <button
             onClick={() => addEventMutation.mutate()}
-            className="bg-green-600 text-white text-sm px-2 py-1 rounded hover:bg-green-700"
+            className="mt-1 rounded-md bg-gradient-to-r from-indigo-500 to-purple-500
+                       text-white text-sm font-medium px-3 py-2
+                       hover:opacity-90 transition"
           >
-            Add
+            Add Event
           </button>
         </div>
       )}
 
+      {/* EMPTY STATE */}
       {displayedEvents.length === 0 && (
-        <p className="text-gray-400 text-sm">No upcoming events</p>
+        <p className="text-sm text-gray-500">No upcoming events</p>
       )}
 
-      {displayedEvents.map((event) => {
-        const { day, month } = getDateParts(event.date);
-        return (
-          <div key={event.id} className="flex gap-3 mb-4">
-            <div className="bg-gray-700 text-center rounded w-12 py-1 flex flex-col items-center justify-center">
-              <div className="text-xs">{month}</div>
-              <div className="text-lg font-bold">{day}</div>
-            </div>
-            <div>
-              <div className="font-medium">{event.title}</div>
-              <div className="text-sm text-gray-400">{formatDate(event.date)}</div>
-              {isOwner && (
-                <button
-                  onClick={() => deleteEvent(event.id)}
-                  className="text-xs text-red-400 mt-1"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })}
+      {/* EVENTS */}
+      <div className="flex flex-col gap-3">
+        {displayedEvents.map((event) => {
+          const { day, month } = getDateParts(event.date);
 
+          return (
+            <div
+              key={event.id}
+              className="flex gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition"
+            >
+              {/* DATE */}
+              <div className="flex w-12 flex-col items-center justify-center rounded-md
+                              bg-gradient-to-b from-indigo-500 to-purple-500
+                              text-white">
+                <div className="text-[10px] font-medium">{month}</div>
+                <div className="text-lg font-bold leading-none">{day}</div>
+              </div>
+
+              {/* INFO */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {event.title}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {formatDate(event.date)}
+                </p>
+
+                {isOwner && (
+                  <button
+                    onClick={() => deleteEvent(event.id)}
+                    className="mt-1 text-xs text-red-500 hover:text-red-700 transition"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* MORE */}
       {upcomingEvents.length > maxEvents && (
-        <p className="text-gray-400 text-xs mt-2">
+        <p className="mt-3 text-xs text-gray-500">
           +{upcomingEvents.length - maxEvents} more events
         </p>
       )}

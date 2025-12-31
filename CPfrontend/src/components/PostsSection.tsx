@@ -26,18 +26,40 @@ export default function PostsSection({
   setUploading,
 }: PostsSectionProps) {
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Your Updates</h2>
+    <section>
+      {/* HEADER */}
+      <h2 className="mb-4 text-lg font-semibold text-gray-900">
+        Updates
+      </h2>
 
-      <PostForm onSubmit={handleCreatePost} uploading={uploading} setUploading={setUploading} />
+      {/* CREATE */}
+      <PostForm
+        onSubmit={handleCreatePost}
+        uploading={uploading}
+        setUploading={setUploading}
+      />
 
-      {postsLoading ? (
-        <p>Loading your posts...</p>
-      ) : posts.length === 0 ? (
-        <p className="text-gray-500">You haven't posted anything yet.</p>
-      ) : (
-        posts.map((post) => (
-          <div key={post.id} className="p-4 bg-white border rounded shadow mb-4 relative">
+      {/* LOADING */}
+      {postsLoading && (
+        <p className="mt-4 text-sm text-gray-500">
+          Loading updates…
+        </p>
+      )}
+
+      {/* EMPTY */}
+      {!postsLoading && posts.length === 0 && (
+        <p className="mt-4 text-sm text-gray-500">
+          You haven’t posted anything yet.
+        </p>
+      )}
+
+      {/* POSTS */}
+      <div className="mt-6 space-y-4">
+        {posts.map((post) => (
+          <div
+            key={post.id}
+            className="relative rounded-xl border border-gray-200 bg-white shadow-sm p-4"
+          >
             {editingPost?.id === post.id ? (
               <PostForm
                 initialContent={post.content}
@@ -49,36 +71,49 @@ export default function PostsSection({
               />
             ) : (
               <>
-                <p className="mb-2">{post.content}</p>
-                {post.image_url && (
-                  <img
-                    src={post.image_url}
-                    alt="Post Image"
-                    className="rounded max-h-60 w-full object-cover mt-2"
-                  />
-                )}
-                <p className="text-sm text-gray-400 mt-2">
-                  {new Date(post.created_at).toLocaleString()}
+                {/* CONTENT */}
+                <p className="text-sm text-gray-900 whitespace-pre-line">
+                  {post.content}
                 </p>
-                <div className="absolute top-2 right-2 flex space-x-2">
-                  <button
-                    onClick={() => setEditingPost(post)}
-                    className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeletePost(post.id)}
-                    className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-                  >
-                    Delete
-                  </button>
+
+                {/* IMAGE */}
+                {post.image_url && (
+                  <div className="mt-3 overflow-hidden rounded-lg border">
+                    <img
+                      src={post.image_url}
+                      alt="Post"
+                      className="max-h-72 w-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* META */}
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-xs text-gray-400">
+                    {new Date(post.created_at).toLocaleString()}
+                  </p>
+
+                  {/* ACTIONS */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setEditingPost(post)}
+                      className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeletePost(post.id)}
+                      className="text-xs font-medium text-red-500 hover:text-red-700 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </>
             )}
           </div>
-        ))
-      )}
-    </div>
+        ))}
+      </div>
+    </section>
   );
 }
