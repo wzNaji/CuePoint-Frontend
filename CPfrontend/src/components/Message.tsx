@@ -1,17 +1,17 @@
 // src/components/Message.tsx
 interface MessageProps {
   text: string;
-  success?: boolean; // optional, default = false
+  success?: boolean;
 }
 
 export default function Message({ text, success = false }: MessageProps) {
   return (
-    <p
-      className={`mt-4 text-sm text-center ${
-        success ? "text-green-500" : "text-red-500"
-      }`}
+    <div
+      className={`mt-4 w-full max-w-md mx-auto px-4 py-2 text-center rounded-md 
+                  text-sm font-medium
+                  ${success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
     >
       {text}
-    </p>
+    </div>
   );
 }

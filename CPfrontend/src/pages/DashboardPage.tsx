@@ -7,6 +7,7 @@ import ProfileCard from "../components/ProfileCard";
 import PostsSection from "../components/PostsSection";
 import FeaturedTracks from "../components/FeaturedTracks";
 import EventsSidebar from "../components/EventsSidebar";
+import Message from "../components/Message";
 
 import {
   fetchCurrentUser,
@@ -147,7 +148,16 @@ export default function DashboardPage() {
 
           <FeaturedTracks userId={user.id} isOwner />
 
-          {message && <p className="text-red-500 mb-4">{message}</p>}
+          {message && (
+          <Message
+            text={message}
+            success={
+              message.includes("created") ||
+              message.includes("updated") ||
+              message.includes("Profile image")
+            }
+          />
+        )}
 
           <PostsSection
             posts={posts || []}
