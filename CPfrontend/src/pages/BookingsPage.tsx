@@ -5,7 +5,6 @@ import BookingCalendar from "../components/BookingCalendar";
 import BookingRequestModal from "../components/BookingRequestModal";
 import BookingDetailsModal from "../components/BookingDetailsModal";
 import { api } from "../api/axios";
-import { fetchCurrentUser } from "../api/auth";
 import type { Booking } from "../types/booking";
 
 export default function BookingsPage() {
@@ -16,14 +15,14 @@ export default function BookingsPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
-  // Toggle state
-  const [showMyRequestsToUser, setShowMyRequestsToUser] = useState(false);
-  const [showAllMyRequests, setShowAllMyRequests] = useState(false);
+  // Toggle state for showing requested or all bookings
+  const [showReceived, setShowReceived] = useState(true);
+  const [showRequested, setShowRequested] = useState(true);
 
   // 🔐 Current logged-in user
   const { data: currentUser } = useQuery({
     queryKey: ["me"],
-    queryFn: fetchCurrentUser,
+    queryFn: () => api.get("/me").then((res) => res.data),
   });
 
   const currentUserId = currentUser?.id;
@@ -53,11 +52,13 @@ export default function BookingsPage() {
     if (!currentUserId || isNaN(calendarOwnerId)) return;
 
     if (isOwnCalendar) {
-      setShowAllMyRequests(true);
-      setShowMyRequestsToUser(false);
+      // Show all requests when viewing your own calendar (sent + received)
+      setShowRequested(true);
+      setShowReceived(true);
     } else {
-      setShowAllMyRequests(false);
-      setShowMyRequestsToUser(true);
+      // Show only requests to the calendar owner when viewing someone else's calendar
+      setShowRequested(false);
+      setShowReceived(true);
     }
   }, [isOwnCalendar, currentUserId, calendarOwnerId]);
 
@@ -67,18 +68,13 @@ export default function BookingsPage() {
 
     if (isOwnCalendar) {
       return (
-        showAllMyRequests &&
-        (b.requester_id === currentUserId ||
-          b.recipient_id === currentUserId)
+        showRequested &&
+        (b.requester_id === currentUserId || b.recipient_id === currentUserId)
       );
     }
 
-    // Viewing someone else's calendar
-    return (
-      showMyRequestsToUser &&
-      b.requester_id === currentUserId &&
-      b.recipient_id === calendarOwnerId
-    );
+    // Viewing someone else's calendar (only show received requests)
+    return showReceived && b.recipient_id === calendarOwnerId;
   });
 
   // ➕ Create booking
@@ -98,8 +94,8 @@ export default function BookingsPage() {
   });
 
   const handleSelectDate = (date: string) => {
-    setSelectedBooking(null);
-    setSelectedDate(date);
+    setSelectedBooking(null); // Ensure no selected booking
+    setSelectedDate(date); // Show modal for selected date
   };
 
   const handleSubmitRequest = (data: {
@@ -124,35 +120,25 @@ export default function BookingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Toggle buttons */}
+      {/* Single button based on calendar view */}
       <div className="flex flex-wrap gap-2">
-        {!isOwnCalendar && (
+        {isOwnCalendar ? (
           <button
-            onClick={() =>
-              setShowMyRequestsToUser((prev) => !prev)
-            }
-            className={`px-3 py-1 rounded ${
-              showMyRequestsToUser
-                ? "bg-blue-600 text-white"
-                : "border"
+            onClick={() => setShowRequested((prev) => !prev)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
+              showRequested ? "bg-indigo-600 text-white" : "bg-white text-gray-900"
+            }`}
+          >
+            Show All Requests (Sent & Received)
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowReceived((prev) => !prev)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
+              showReceived ? "bg-indigo-600 text-white" : "bg-white text-gray-900"
             }`}
           >
             My Requests to: {calendarOwner?.display_name}
-          </button>
-        )}
-
-        {isOwnCalendar && (
-          <button
-            onClick={() =>
-              setShowAllMyRequests((prev) => !prev)
-            }
-            className={`px-3 py-1 rounded ${
-              showAllMyRequests
-                ? "bg-blue-600 text-white"
-                : "border"
-            }`}
-          >
-            All My Requests (Sent & Received)
           </button>
         )}
       </div>
@@ -161,16 +147,14 @@ export default function BookingsPage() {
       <BookingCalendar
         bookings={filteredBookings}
         onSelectDate={handleSelectDate}
-        onSelectBooking={(booking) =>
-          setSelectedBooking(booking)
-        }
+        onSelectBooking={(booking) => setSelectedBooking(booking)}
       />
 
       {/* Modals */}
-      {selectedDate && !isOwnCalendar && (
+      {selectedDate && (
         <BookingRequestModal
           date={selectedDate}
-          onClose={() => setSelectedDate(null)}
+          onClose={() => setSelectedDate(null)} // Close modal when date is null
           onSubmit={handleSubmitRequest}
         />
       )}
@@ -178,7 +162,7 @@ export default function BookingsPage() {
       {selectedBooking && (
         <BookingDetailsModal
           booking={selectedBooking}
-          onClose={() => setSelectedBooking(null)}
+          onClose={() => setSelectedBooking(null)} // Close modal when booking is null
         />
       )}
     </div>

@@ -34,19 +34,64 @@ export default function BookingRequestForm({
           note,
         });
       }}
-      className="space-y-3"
+      className="space-y-4 rounded-xl border border-gray-200 bg-white shadow-sm p-6"
     >
-      <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full border p-2 rounded" />
-      <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full border p-2 rounded" />
-      <input type="number" placeholder="Fee" value={fee ?? ""} onChange={(e) => setFee(Number(e.target.value))} className="w-full border p-2 rounded" />
-      <input type="text" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full border p-2 rounded" />
-      <textarea placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)} className="w-full border p-2 rounded" />
+      {/* Start Time */}
+      <input
+        type="time"
+        value={startTime}
+        onChange={(e) => setStartTime(e.target.value)}
+        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      />
+      
+      {/* End Time */}
+      <input
+        type="time"
+        value={endTime}
+        onChange={(e) => setEndTime(e.target.value)}
+        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      />
+      
+      {/* Fee */}
+      <input
+        type="number"
+        placeholder="Fee"
+        value={fee ?? ""}
+        onChange={(e) => setFee(Number(e.target.value))}
+        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      />
+      
+      {/* Location */}
+      <input
+        type="text"
+        placeholder="Location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      />
+      
+      {/* Note */}
+      <textarea
+        placeholder="Note"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      />
 
-      <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded">
+      {/* Submit Button */}
+      <button
+        type="submit"
+        className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-lg shadow-sm hover:opacity-90 transition"
+      >
         Send booking request
       </button>
 
-      <button type="button" onClick={onCancel} className="w-full border py-2 rounded">
+      {/* Cancel Button */}
+      <button
+        type="button"
+        onClick={onCancel}
+        className="w-full border border-gray-300 py-3 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+      >
         Cancel
       </button>
     </form>

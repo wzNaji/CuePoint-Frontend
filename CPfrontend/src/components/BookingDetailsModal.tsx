@@ -14,7 +14,6 @@ export default function BookingDetailsModal({
 }: BookingDetailsModalProps) {
   const queryClient = useQueryClient();
 
-  // ✅ Always call hooks at the top level
   const { data: currentUser, isLoading } = useCurrentUser();
 
   const updateStatusMutation = useMutation({
@@ -30,22 +29,20 @@ export default function BookingDetailsModal({
     updateStatusMutation.mutate(status);
   };
 
-  // ✅ Early return for loading or missing user
   if (isLoading || !currentUser) return null;
 
-  // ✅ Permissions logic
   const isRequester = booking.requester_id === currentUser.id;
   const isRecipient = booking.recipient_id === currentUser.id;
   const isPending = booking.status === "requested";
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
           {booking.location || "Booking details"}
         </h2>
 
-        <div className="space-y-2 text-sm">
+        <div className="space-y-3 text-sm text-gray-700">
           <p>
             <strong>Date:</strong> {booking.date}
           </p>
@@ -66,13 +63,13 @@ export default function BookingDetailsModal({
           <div className="mt-6 flex gap-2">
             <button
               onClick={() => updateStatus("accepted")}
-              className="flex-1 bg-green-600 text-white py-2 rounded"
+              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-2 rounded-lg shadow-sm hover:opacity-90 transition"
             >
               Accept
             </button>
             <button
               onClick={() => updateStatus("rejected")}
-              className="flex-1 bg-red-600 text-white py-2 rounded"
+              className="flex-1 bg-red-600 text-white py-2 rounded-lg shadow-sm hover:opacity-90 transition"
             >
               Decline
             </button>
@@ -82,7 +79,7 @@ export default function BookingDetailsModal({
         {isPending && isRequester && (
           <button
             onClick={() => updateStatus("cancelled")}
-            className="mt-6 w-full border py-2 rounded"
+            className="mt-6 w-full border border-gray-300 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition"
           >
             Cancel request
           </button>
@@ -90,7 +87,7 @@ export default function BookingDetailsModal({
 
         <button
           onClick={onClose}
-          className="mt-4 w-full border py-2 rounded"
+          className="mt-4 w-full border border-gray-300 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition"
         >
           Close
         </button>

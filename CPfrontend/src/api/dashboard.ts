@@ -15,7 +15,7 @@ export const fetchCurrentUser = async (): Promise<User | null> => {
 export const uploadProfileImage = async (file: File): Promise<User> => {
   const form = new FormData();
   form.append("file", file);
-  const res = await api.post("/me/profile-image", form);
+  const res = await api.put("/me/profile-image", form);
   return res.data;
 };
 
