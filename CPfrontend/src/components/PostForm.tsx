@@ -1,5 +1,5 @@
-// src/components/PostForm.tsx
 import { useState } from "react";
+import { uploadImage } from "../api/post"; // Import your uploadImage function
 
 interface PostFormProps {
   initialContent?: string;
@@ -26,25 +26,30 @@ export default function PostForm({
     if (!e.target.files?.[0]) return;
     const file = e.target.files[0];
     setSelectedFile(file);
-    setImageUrl(URL.createObjectURL(file));
+    setImageUrl(URL.createObjectURL(file)); // Preview image
   };
 
   const handleSave = async () => {
     if (!content.trim() && !selectedFile && !imageUrl) return;
 
-    const finalImageUrl = imageUrl;
+    let finalImageUrl = imageUrl;
 
-    if (selectedFile && setUploading) {
-      setUploading(true);
+    if (selectedFile) {
+      if (setUploading) setUploading(true);
       try {
-        // upload logic here if needed
+        // Upload image to the server
+        finalImageUrl = await uploadImage(selectedFile);
+      } catch (error) {
+        console.error("Error uploading image:", error);
       } finally {
-        setUploading(false);
+        if (setUploading) setUploading(false);
       }
     }
 
+    // Submit the content and the image URL
     onSubmit(content, finalImageUrl);
 
+    // Reset fields
     setContent("");
     setSelectedFile(null);
     setImageUrl("");
