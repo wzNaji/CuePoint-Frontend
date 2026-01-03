@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { registerUser } from "../api/auth";
+
 import FormField from "../components/FormField";
 import Message from "../components/Message";
+import Button from "../components/button";
+import Card from "../components/Card";
 
 const RegisterPage = () => {
   const [email, setEmail] = useState("");
@@ -33,10 +36,12 @@ const RegisterPage = () => {
     try {
       const data = await registerUser(email, displayName, password);
 
-      setGeneralMessage(`Registered successfully! Welcome, ${data.display_name}`);
+      setGeneralMessage(
+        `Registered successfully! Welcome, ${data.display_name}`
+      );
       setSuccess(true);
 
-      setTimeout(() => navigate("/login"), 3000);
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error: unknown) {
       setSuccess(false);
 
@@ -70,20 +75,53 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 border rounded shadow">
-      <h1 className="text-2xl mb-4">Register</h1>
+    <div className="flex justify-center py-20">
+      <Card className="w-full max-w-md p-6 bg-gray-900 border-gray-800">
+        <h1 className="text-2xl font-bold text-white mb-4">
+          Create an account
+        </h1>
 
-      <form onSubmit={handleRegister} className="flex flex-col gap-3">
-        <FormField type="email" placeholder="Email" value={email} onChange={setEmail} error={emailError} />
-        <FormField type="text" placeholder="Display Name" value={displayName} onChange={setDisplayName} error={displayNameError} />
-        <FormField type="password" placeholder="Password" value={password} onChange={setPassword} error={passwordError} />
+        <form onSubmit={handleRegister} className="flex flex-col gap-3">
+          <FormField
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={setEmail}
+            error={emailError}
+          />
 
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-          Register
-        </button>
-      </form>
+          <FormField
+            type="text"
+            placeholder="Display Name"
+            value={displayName}
+            onChange={setDisplayName}
+            error={displayNameError}
+          />
 
-      {generalMessage && <Message text={generalMessage} success={success} />}
+          <FormField
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={setPassword}
+            error={passwordError}
+          />
+
+          <Button
+            type="submit"
+            variant="secondary"
+            size="md"
+            className="mt-2"
+          >
+            Register
+          </Button>
+        </form>
+
+        {generalMessage && (
+          <div className="mt-4">
+            <Message text={generalMessage} success={success} />
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

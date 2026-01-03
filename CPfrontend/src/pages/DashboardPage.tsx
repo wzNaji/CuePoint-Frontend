@@ -70,7 +70,7 @@ export default function DashboardPage() {
   });
 
   // -------------------- Loading / Auth Check --------------------
-  if (userLoading) return <p>Loading...</p>;
+  if (userLoading) return <p className="p-6 text-white">Loading...</p>;
   if (!user) {
     navigate("/login");
     return null;
@@ -131,14 +131,15 @@ export default function DashboardPage() {
 
   // -------------------- JSX --------------------
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-900 p-6 text-white">
       <div className="max-w-7xl mx-auto flex gap-6">
         {/* Main Column */}
-        <div className="flex-1">
-          <DashboardHeader displayName={user.display_name} />
+        <div className="flex-1 space-y-6">
+          <DashboardHeader />
 
           <ProfileCard
             user={user}
+            isOwner={true}
             uploading={uploading}
             onProfileImageChange={handleProfileImageChange}
             onUpdateProfile={() => navigate("/me/update")}
@@ -149,15 +150,15 @@ export default function DashboardPage() {
           <FeaturedTracks userId={user.id} isOwner />
 
           {message && (
-          <Message
-            text={message}
-            success={
-              message.includes("created") ||
-              message.includes("updated") ||
-              message.includes("Profile image")
-            }
-          />
-        )}
+            <Message
+              text={message}
+              success={
+                message.includes("created") ||
+                message.includes("updated") ||
+                message.includes("Profile image")
+              }
+            />
+          )}
 
           <PostsSection
             posts={posts || []}
@@ -169,7 +170,9 @@ export default function DashboardPage() {
             handleDeletePost={handleDeletePost}
             uploading={uploading}
             setUploading={setUploading}
+            isOwner={true}
           />
+
         </div>
 
         {/* Sidebar */}

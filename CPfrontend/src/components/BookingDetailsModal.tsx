@@ -2,6 +2,8 @@ import type { Booking } from "../types/booking";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/axios";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import Button from "./button";
+import Card from "./Card";
 
 interface BookingDetailsModalProps {
   booking: Booking;
@@ -13,7 +15,6 @@ export default function BookingDetailsModal({
   onClose,
 }: BookingDetailsModalProps) {
   const queryClient = useQueryClient();
-
   const { data: currentUser, isLoading } = useCurrentUser();
 
   const updateStatusMutation = useMutation({
@@ -36,13 +37,11 @@ export default function BookingDetailsModal({
   const isPending = booking.status === "requested";
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          {booking.location || "Booking details"}
-        </h2>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full p-6 bg-neutral-900 border-neutral-800 text-neutral-100">
+        <h2 className="text-xl font-semibold mb-4">{booking.location || "Booking details"}</h2>
 
-        <div className="space-y-3 text-sm text-gray-700">
+        <div className="space-y-3 text-sm text-neutral-200">
           <p>
             <strong>Date:</strong> {booking.date}
           </p>
@@ -61,37 +60,41 @@ export default function BookingDetailsModal({
         {/* ACTION BUTTONS */}
         {isPending && isRecipient && (
           <div className="mt-6 flex gap-2">
-            <button
+            <Button
+              className="flex-1"
+              variant="primary"
               onClick={() => updateStatus("accepted")}
-              className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-2 rounded-lg shadow-sm hover:opacity-90 transition"
             >
               Accept
-            </button>
-            <button
+            </Button>
+            <Button
+              className="flex-1"
+              variant="secondary"
               onClick={() => updateStatus("rejected")}
-              className="flex-1 bg-red-600 text-white py-2 rounded-lg shadow-sm hover:opacity-90 transition"
             >
               Decline
-            </button>
+            </Button>
           </div>
         )}
 
         {isPending && isRequester && (
-          <button
+          <Button
+            className="mt-6 w-full"
+            variant="secondary"
             onClick={() => updateStatus("cancelled")}
-            className="mt-6 w-full border border-gray-300 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition"
           >
             Cancel request
-          </button>
+          </Button>
         )}
 
-        <button
+        <Button
+          className="mt-4 w-full"
+          variant="secondary"
           onClick={onClose}
-          className="mt-4 w-full border border-gray-300 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition"
         >
           Close
-        </button>
-      </div>
+        </Button>
+      </Card>
     </div>
   );
 }

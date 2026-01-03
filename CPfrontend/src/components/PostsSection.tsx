@@ -1,5 +1,7 @@
 // src/components/PostsSection.tsx
 import PostForm from "./PostForm";
+import Button from "./button";
+import Card from "./Card";
 import type { Post } from "../types/post";
 
 interface PostsSectionProps {
@@ -12,6 +14,7 @@ interface PostsSectionProps {
   handleDeletePost: (postId: number) => void;
   uploading: boolean;
   setUploading: (value: boolean) => void;
+  isOwner?: boolean; // NEW
 }
 
 export default function PostsSection({
@@ -24,43 +27,41 @@ export default function PostsSection({
   handleDeletePost,
   uploading,
   setUploading,
+  isOwner = false, // default false
 }: PostsSectionProps) {
   return (
-    <section>
+    <section className="space-y-6">
       {/* HEADER */}
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">
-        Updates
-      </h2>
+      <h2 className="text-lg font-semibold text-gray-900">Updates</h2>
 
-      {/* CREATE */}
-      <PostForm
-        onSubmit={handleCreatePost}
-        uploading={uploading}
-        setUploading={setUploading}
-      />
+      {/* CREATE (only for owner) */}
+      {isOwner && (
+        <Card>
+          <PostForm
+            onSubmit={handleCreatePost}
+            uploading={uploading}
+            setUploading={setUploading}
+          />
+        </Card>
+      )}
 
       {/* LOADING */}
-      {postsLoading && (
-        <p className="mt-4 text-sm text-gray-500">
-          Loading updates…
-        </p>
-      )}
+      {postsLoading && <p className="text-sm text-gray-500">Loading updates…</p>}
 
       {/* EMPTY */}
       {!postsLoading && posts.length === 0 && (
-        <p className="mt-4 text-sm text-gray-500">
-          You haven’t posted anything yet.
+        <p className="text-sm text-gray-500">
+          {isOwner
+            ? "You haven’t posted anything yet."
+            : "This user hasn’t posted anything yet."}
         </p>
       )}
 
       {/* POSTS */}
-      <div className="mt-6 space-y-4">
+      <div className="space-y-4">
         {posts.map((post) => (
-          <div
-            key={post.id}
-            className="relative rounded-xl border border-gray-200 bg-white shadow-sm p-4"
-          >
-            {editingPost?.id === post.id ? (
+          <Card key={post.id}>
+            {editingPost?.id === post.id && isOwner ? (
               <PostForm
                 initialContent={post.content}
                 initialImageUrl={post.image_url || ""}
@@ -72,9 +73,7 @@ export default function PostsSection({
             ) : (
               <>
                 {/* CONTENT */}
-                <p className="text-sm text-gray-900 whitespace-pre-line">
-                  {post.content}
-                </p>
+                <p className="text-sm text-gray-900 whitespace-pre-line">{post.content}</p>
 
                 {/* IMAGE */}
                 {post.image_url && (
@@ -87,31 +86,36 @@ export default function PostsSection({
                   </div>
                 )}
 
-                {/* META */}
+                {/* META & ACTIONS */}
                 <div className="mt-3 flex items-center justify-between">
                   <p className="text-xs text-gray-400">
                     {new Date(post.created_at).toLocaleString()}
                   </p>
 
-                  {/* ACTIONS */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setEditingPost(post)}
-                      className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeletePost(post.id)}
-                      className="text-xs font-medium text-red-500 hover:text-red-700 transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {/** ACTIONS ONLY FOR OWNER */}
+                  {isOwner && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setEditingPost(post)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleDeletePost(post.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </>
             )}
-          </div>
+          </Card>
         ))}
       </div>
     </section>
