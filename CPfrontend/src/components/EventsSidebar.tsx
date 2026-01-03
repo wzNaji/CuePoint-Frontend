@@ -9,6 +9,7 @@ interface Event {
   title: string;
   date: string;
   location?: string;
+  url?: string; // new
 }
 
 function formatDate(date: string) {
@@ -33,6 +34,7 @@ interface EventsSidebarProps {
   isOwner: boolean;
   maxEvents?: number;
 }
+import Message from "./Message"; // make sure to import your Message component
 
 export default function EventsSidebar({
   userId,
@@ -52,19 +54,49 @@ export default function EventsSidebar({
   const [showAdd, setShowAdd] = useState(false);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
+  const [url, setUrl] = useState(""); 
+  const [message, setMessage] = useState<string | null>(null); // <-- new
+  const [success, setSuccess] = useState(false); // for Message component styling
 
   const addEventMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post("/events", { title, date, location: "" });
+      const res = await api.post("/events", { title, date, location: "", url });
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events", userId] });
       setTitle("");
       setDate("");
+      setUrl("");
       setShowAdd(false);
+      setMessage("Event added successfully!");
+      setSuccess(true);
+      setTimeout(() => setMessage(null), 3000); // hide after 3s
+    },
+    onError: () => {
+      setMessage("Failed to add event.");
+      setSuccess(false);
+      setTimeout(() => setMessage(null), 3000);
     },
   });
+
+  const handleAddEvent = () => {
+    if (!title || !date) {
+      setMessage("Please provide a title and date.");
+      setSuccess(false);
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    if (new Date(date) < new Date()) {
+      setMessage("Events need to be in the future");
+      setSuccess(false);
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    addEventMutation.mutate();
+  };
 
   const deleteEvent = async (id: number) => {
     await api.delete(`/events/${id}`);
@@ -127,7 +159,6 @@ export default function EventsSidebar({
               focus:outline-none focus:ring-2 focus:ring-red-600
             "
           />
-
           <input
             type="date"
             value={date}
@@ -140,15 +171,24 @@ export default function EventsSidebar({
               focus:outline-none focus:ring-2 focus:ring-red-600
             "
           />
-
-          <Button
-            variant="primary"
-            size="sm"
-            className="w-full bg-red-600 hover:bg-red-700"
-            onClick={() => addEventMutation.mutate()}
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Event link (e.g., Resident Advisor)"
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <button
+            onClick={handleAddEvent} // <-- changed from direct mutate
+            className="mt-1 rounded-md bg-gradient-to-r from-indigo-500 to-purple-500
+                       text-white text-sm font-medium px-3 py-2
+                       hover:opacity-90 transition"
           >
             Add Event
-          </Button>
+          </button>
+
+          {message && <Message text={message} success={success} />}
         </div>
       )}
 
@@ -162,19 +202,8 @@ export default function EventsSidebar({
         {displayedEvents.map((event) => {
           const { day, month } = getDateParts(event.date);
 
-          return (
-            <div
-              key={event.id}
-              className="
-                flex gap-3
-                rounded-lg
-                border border-neutral-700
-                bg-neutral-800
-                p-3
-                hover:bg-neutral-700
-                transition
-              "
-            >
+          const content = (
+            <div className="flex gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition">
               {/* DATE */}
               <div className="flex w-12 flex-col items-center justify-center rounded-md bg-neutral-700 text-white">
                 <div className="text-[10px] font-medium">{month}</div>
@@ -183,12 +212,8 @@ export default function EventsSidebar({
 
               {/* INFO */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-neutral-100 truncate">
-                  {event.title}
-                </p>
-                <p className="text-xs text-neutral-400">
-                  {formatDate(event.date)}
-                </p>
+                <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
+                <p className="text-xs text-gray-500">{formatDate(event.date)}</p>
 
                 {/* ACTION ROW (height reserved) */}
                 <div className="mt-1 h-7 flex items-center">
@@ -207,6 +232,19 @@ export default function EventsSidebar({
                 </div>
               </div>
             </div>
+          );
+
+          // If URL exists, wrap content in a link
+          const linkUrl = event.url
+            ? event.url
+            : `https://www.residentadvisor.net/events.aspx?search=${encodeURIComponent(
+                event.title
+              )}`;
+
+          return (
+            <a key={event.id} href={linkUrl} target="_blank" rel="noopener noreferrer">
+              {content}
+            </a>
           );
         })}
       </div>
