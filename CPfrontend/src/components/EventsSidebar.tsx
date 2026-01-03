@@ -3,13 +3,14 @@ import { useState } from "react";
 import { api } from "../api/axios";
 import Button from "./button";
 import Card from "./Card";
+import Message from "./Message";
 
 interface Event {
   id: number;
   title: string;
   date: string;
   location?: string;
-  url?: string; // new
+  url?: string; // <- added
 }
 
 function formatDate(date: string) {
@@ -34,7 +35,6 @@ interface EventsSidebarProps {
   isOwner: boolean;
   maxEvents?: number;
 }
-import Message from "./Message"; // make sure to import your Message component
 
 export default function EventsSidebar({
   userId,
@@ -54,9 +54,9 @@ export default function EventsSidebar({
   const [showAdd, setShowAdd] = useState(false);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
-  const [url, setUrl] = useState(""); 
-  const [message, setMessage] = useState<string | null>(null); // <-- new
-  const [success, setSuccess] = useState(false); // for Message component styling
+  const [url, setUrl] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const addEventMutation = useMutation({
     mutationFn: async () => {
@@ -71,7 +71,7 @@ export default function EventsSidebar({
       setShowAdd(false);
       setMessage("Event added successfully!");
       setSuccess(true);
-      setTimeout(() => setMessage(null), 3000); // hide after 3s
+      setTimeout(() => setMessage(null), 3000);
     },
     onError: () => {
       setMessage("Failed to add event.");
@@ -106,43 +106,30 @@ export default function EventsSidebar({
   const upcomingEvents = events.filter(
     (event) => new Date(event.date) >= new Date()
   );
-
   const displayedEvents = upcomingEvents.slice(0, maxEvents);
 
   return (
-    <Card
-      className="
-        w-80 shrink-0
-        space-y-4
-        bg-neutral-900
-        border-neutral-800
-        text-neutral-100
-        p-4
-      "
-    >
+    <Card className="w-80 shrink-0 space-y-4 bg-neutral-900 border-neutral-800 text-neutral-100 p-4">
       {/* HEADER */}
-      {/* HEADER */}
-    <div className="flex items-center justify-between">
-      <h3 className="text-sm font-semibold flex items-center gap-2">
-        🎟 <span>Upcoming Events</span>
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          🎟 <span>Upcoming Events</span>
+        </h3>
 
-      {/* ACTION SLOT (height reserved) */}
-      <div className="h-7 flex items-center">
-        {isOwner ? (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowAdd(!showAdd)}
-          >
-            {showAdd ? "Cancel" : "+ Add"}
-          </Button>
-        ) : (
-          <span className="invisible text-sm">+ Add</span>
-        )}
+        <div className="h-7 flex items-center">
+          {isOwner ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowAdd(!showAdd)}
+            >
+              {showAdd ? "Cancel" : "+ Add"}
+            </Button>
+          ) : (
+            <span className="invisible text-sm">+ Add</span>
+          )}
+        </div>
       </div>
-    </div>
-
 
       {/* ADD EVENT */}
       {showAdd && isOwner && (
@@ -151,42 +138,30 @@ export default function EventsSidebar({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Event title"
-            className="
-              w-full rounded-md
-              border border-neutral-700
-              px-3 py-2 text-sm
-              bg-neutral-800 text-neutral-100
-              focus:outline-none focus:ring-2 focus:ring-red-600
-            "
+            className="w-full rounded-md border border-neutral-700 px-3 py-2 text-sm bg-neutral-800 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-red-600"
           />
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="
-              w-full rounded-md
-              border border-neutral-700
-              px-3 py-2 text-sm
-              bg-neutral-800 text-neutral-100
-              focus:outline-none focus:ring-2 focus:ring-red-600
-            "
+            className="w-full rounded-md border border-neutral-700 px-3 py-2 text-sm bg-neutral-800 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-red-600"
           />
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Event link (e.g., Resident Advisor)"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            placeholder="Event URL (optional)"
+            className="w-full rounded-md border border-neutral-700 px-3 py-2 text-sm bg-neutral-800 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-red-600"
           />
-          <button
-            onClick={handleAddEvent} // <-- changed from direct mutate
-            className="mt-1 rounded-md bg-gradient-to-r from-indigo-500 to-purple-500
-                       text-white text-sm font-medium px-3 py-2
-                       hover:opacity-90 transition"
+
+          <Button
+            variant="primary"
+            size="sm"
+            className="w-full bg-red-600 hover:bg-red-700"
+            onClick={handleAddEvent}
           >
             Add Event
-          </button>
+          </Button>
 
           {message && <Message text={message} success={success} />}
         </div>
@@ -203,7 +178,7 @@ export default function EventsSidebar({
           const { day, month } = getDateParts(event.date);
 
           const content = (
-            <div className="flex gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition">
+            <div className="flex gap-3 rounded-lg border border-neutral-700 bg-neutral-800 p-3 hover:bg-neutral-700 transition">
               {/* DATE */}
               <div className="flex w-12 flex-col items-center justify-center rounded-md bg-neutral-700 text-white">
                 <div className="text-[10px] font-medium">{month}</div>
@@ -212,10 +187,12 @@ export default function EventsSidebar({
 
               {/* INFO */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
-                <p className="text-xs text-gray-500">{formatDate(event.date)}</p>
+                <p className="text-sm font-medium text-neutral-100 truncate">
+                  {event.title}
+                </p>
+                <p className="text-xs text-neutral-400">{formatDate(event.date)}</p>
 
-                {/* ACTION ROW (height reserved) */}
+                {/* ACTION ROW */}
                 <div className="mt-1 h-7 flex items-center">
                   {isOwner ? (
                     <Button
@@ -234,7 +211,7 @@ export default function EventsSidebar({
             </div>
           );
 
-          // If URL exists, wrap content in a link
+          // Wrap in link if URL exists or fallback to Resident Advisor search
           const linkUrl = event.url
             ? event.url
             : `https://www.residentadvisor.net/events.aspx?search=${encodeURIComponent(
@@ -242,7 +219,12 @@ export default function EventsSidebar({
               )}`;
 
           return (
-            <a key={event.id} href={linkUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              key={event.id}
+              href={linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {content}
             </a>
           );
