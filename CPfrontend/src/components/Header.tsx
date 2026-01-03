@@ -1,22 +1,41 @@
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SearchBar from "./SearchBar";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import Button from "./button";
+import { logout } from "../api/dashboard";
 
 export default function Header() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: currentUser, isLoading } = useCurrentUser();
 
+  const logoutMutation = useMutation({
+    mutationFn: () => logout(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      navigate("/login");
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
+    <header className="sticky top-0 z-40 bg-neutral-950/80 backdrop-blur border-b border-neutral-800">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Left */}
         <h1
           onClick={() => navigate("/")}
-          className="text-xl font-extrabold tracking-tight cursor-pointer
-                     bg-gradient-to-r from-indigo-500 to-purple-500
-                     bg-clip-text text-transparent hover:opacity-80 transition"
+          className="group text-xl font-extrabold tracking-tight cursor-pointer transition duration-300"
         >
-          CuePoint
+          <span className="text-red-500 group-hover:drop-shadow-[0_0_16px_rgba(255,0,0,0.8)]">
+            Cue
+          </span>
+          <span className="text-white group-hover:drop-shadow-[0_0_12px_rgba(255,0,0,0.5)]">
+            Point
+          </span>
         </h1>
 
         {/* Center */}
@@ -30,49 +49,49 @@ export default function Header() {
             <>
               {currentUser ? (
                 <>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
                     onClick={() => navigate("/dashboard")}
-                    className="rounded-lg px-4 py-2 text-sm font-medium
-                               bg-gradient-to-r from-indigo-500 to-purple-500
-                               text-white shadow-sm
-                               hover:opacity-90 transition"
                   >
                     Dashboard
-                  </button>
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="bg-gray-800 text-red-600 hover:text-red-700 hover:bg-gray-700"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
 
                   <img
-                    src={
-                      currentUser.profile_image_url ||
-                      "/default-avatar.png"
-                    }
-                    onClick={() =>
-                      navigate(`/profiles/${currentUser.id}`)
-                    }
+                    src={currentUser.profile_image_url || "/default-avatar.png"}
+                    onClick={() => navigate(`/profiles/${currentUser.id}`)}
                     className="w-9 h-9 rounded-full object-cover border
-                               cursor-pointer hover:ring-2 hover:ring-indigo-400
+                               cursor-pointer hover:ring-2 hover:ring-primary
                                transition"
                   />
                 </>
               ) : (
                 <>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
                     onClick={() => navigate("/login")}
-                    className="rounded-lg px-4 py-2 text-sm font-medium
-                               border border-gray-300
-                               hover:bg-gray-100 transition"
                   >
                     Login
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="bg-red-700 hover:bg-red-900 text-white"
                     onClick={() => navigate("/register")}
-                    className="rounded-lg px-4 py-2 text-sm font-medium
-                               bg-gradient-to-r from-indigo-500 to-purple-500
-                               text-white shadow-sm
-                               hover:opacity-90 transition"
                   >
                     Sign up
-                  </button>
+                  </Button>
                 </>
               )}
             </>

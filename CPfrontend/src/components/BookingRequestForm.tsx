@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Button from "./button";
+import Card from "./Card";
 
 interface BookingRequestFormProps {
   date: string;
@@ -23,77 +25,80 @@ export default function BookingRequestForm({
   const [note, setNote] = useState("");
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit({
-          start_time: startTime,
-          end_time: endTime,
-          fee,
-          location: location.trim() || "Unknown Location",
-          note,
-        });
-      }}
-      className="space-y-4 rounded-xl border border-gray-200 bg-white shadow-sm p-6"
-    >
-      {/* Start Time */}
-      <input
-        type="time"
-        value={startTime}
-        onChange={(e) => setStartTime(e.target.value)}
-        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      
-      {/* End Time */}
-      <input
-        type="time"
-        value={endTime}
-        onChange={(e) => setEndTime(e.target.value)}
-        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      
-      {/* Fee */}
-      <input
-        type="number"
-        placeholder="Fee"
-        value={fee ?? ""}
-        onChange={(e) => setFee(Number(e.target.value))}
-        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      
-      {/* Location */}
-      <input
-        type="text"
-        placeholder="Location"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      
-      {/* Note */}
-      <textarea
-        placeholder="Note"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        className="w-full border border-gray-300 p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-
-      {/* Submit Button */}
-      <button
-        type="submit"
-        className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-lg shadow-sm hover:opacity-90 transition"
+    <Card className="space-y-4 bg-neutral-900 border-neutral-800 text-neutral-100">
+      {/* Form */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit({
+            start_time: startTime,
+            end_time: endTime,
+            fee,
+            location: location.trim() || "Unknown Location",
+            note,
+          });
+        }}
+        className="space-y-4"
       >
-        Send booking request
-      </button>
+        {/* Start Time */}
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
 
-      {/* Cancel Button */}
-      <button
-        type="button"
-        onClick={onCancel}
-        className="w-full border border-gray-300 py-3 rounded-lg text-gray-600 hover:bg-gray-100 transition"
-      >
-        Cancel
-      </button>
-    </form>
+        {/* End Time */}
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+
+        {/* Fee */}
+        <input
+          type="number"
+          placeholder="Fee"
+          value={fee ?? ""}
+          onChange={(e) => setFee(Number(e.target.value))}
+          className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+
+        {/* Location */}
+        <input
+          type="text"
+          placeholder="Location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+
+        {/* Note */}
+        <textarea
+          placeholder="Note"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+
+        {/* Buttons */}
+        <div className="space-y-2">
+          <Button type="submit" variant="primary" size="md" className="w-full">
+            Send booking request
+          </Button>
+
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            className="w-full"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }

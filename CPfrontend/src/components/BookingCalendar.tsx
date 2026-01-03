@@ -1,9 +1,11 @@
 import { Calendar, dateFnsLocalizer, type SlotInfo, type View } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
+import { format, parse, startOfWeek, getDay, isToday } from "date-fns";
 import { enUS } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import type { Booking } from "../types/booking";
 import { useState } from "react";
+import Button from "./button";
+import Card from "./Card";
 
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({
@@ -35,6 +37,7 @@ export default function BookingCalendar({
 }: BookingCalendarProps) {
   const [view, setView] = useState<View>("month");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
   const events: BookingEvent[] = bookings.map((b) => ({
     title: b.location ?? "Booking request",
     start: new Date(`${b.date}T${b.start_time ?? "00:00"}`),
@@ -48,27 +51,41 @@ export default function BookingCalendar({
     onSelectDate(date);
   };
 
+  const getEventColor = (status: string) => {
+    switch (status) {
+      case "requested":
+        return "#f97316"; // orange-ish for requested
+      case "accepted":
+        return "#22c55e"; // green
+      case "rejected":
+        return "#b91c1c"; // red
+      case "cancelled":
+        return "#4b5563"; // gray
+      default:
+        return "#374151"; // gray default
+    }
+  };
+
   return (
-    <div className="mb-6 rounded-xl border border-gray-200 bg-white shadow-sm p-6">
+    <Card className="mb-6 p-6">
       {/* Calendar Header */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="text-lg font-semibold text-gray-900">
-          <span className="text-indigo-500">Bookings Calendar</span>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* VIEW SELECTOR */}
-          <button
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-semibold text-neutral-100">Bookings Calendar</h2>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={view === "month" ? "primary" : "secondary"}
             onClick={() => setView("month")}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition"
           >
-            Month View
-          </button>
-          <button
+            Month
+          </Button>
+          <Button
+            size="sm"
+            variant={view === "week" ? "primary" : "secondary"}
             onClick={() => setView("week")}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 transition"
           >
-            Week View
-          </button>
+            Week
+          </Button>
         </div>
       </div>
 
@@ -87,21 +104,30 @@ export default function BookingCalendar({
         onNavigate={(newDate) => setCurrentDate(newDate)}
         dayLayoutAlgorithm="no-overlap"
         popup
-        style={{ height: 600 }}
-        eventPropGetter={(event) => {
-          let backgroundColor = "#ccc"; // default
-          if (event.booking.status === "requested") backgroundColor = "#facc15"; // yellow
-          if (event.booking.status === "accepted") backgroundColor = "#22c55e"; // green
-          if (event.booking.status === "rejected") backgroundColor = "#ef4444"; // red
-          if (event.booking.status === "cancelled") backgroundColor = "#6b7280"; // gray
-
+        style={{ height: 600, backgroundColor: "#1f1f1f", borderRadius: 12, padding: 4 }}
+        eventPropGetter={(event) => ({
+          style: {
+            backgroundColor: getEventColor(event.booking.status),
+            color: "white",
+            borderRadius: 8,
+            padding: "2px 4px",
+            fontSize: "0.75rem",
+            fontWeight: 500,
+          },
+        })}
+        dayPropGetter={(date) => {
+          // All day cells dark, highlight today in red border
+          const todayHighlight = isToday(date)
+            ? { border: "2px solid #ef4444", borderRadius: 8 }
+            : {};
           return {
-            style: { backgroundColor, color: "white", borderRadius: "4px", padding: "2px" },
+            style: {
+              backgroundColor: "#1f1f1f",
+              ...todayHighlight,
+            },
           };
         }}
       />
-
-      
-    </div>
+    </Card>
   );
 }

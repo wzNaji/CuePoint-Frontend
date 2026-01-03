@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api/axios";
 import { getEmbedType, getEmbedUrl } from "../utils/embeds";
+import Button from "./button";
+import Card from "./Card";
 
 interface Track {
   id: number;
@@ -14,10 +16,7 @@ interface FeaturedTracksProps {
   isOwner: boolean;
 }
 
-export default function FeaturedTracks({
-  userId,
-  isOwner,
-}: FeaturedTracksProps) {
+export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps) {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -48,19 +47,17 @@ export default function FeaturedTracks({
   };
 
   return (
-    <section className="mb-6 rounded-xl border border-gray-200 bg-white shadow-sm p-6">
+    <Card className="mb-6 space-y-6 bg-neutral-900 border-neutral-800 text-neutral-100 p-6">
       {/* HEADER */}
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold flex items-center gap-2">
           🎧 <span>Featured Tracks</span>
         </h2>
       </div>
 
       {/* EMPTY STATE */}
       {tracks.length === 0 && (
-        <p className="text-sm text-gray-500">
-          No featured tracks yet.
-        </p>
+        <p className="text-sm text-neutral-400">No featured tracks yet.</p>
       )}
 
       {/* TRACKS */}
@@ -70,23 +67,23 @@ export default function FeaturedTracks({
           const embedUrl = getEmbedUrl(track.url);
 
           return (
-            <div
+            <Card
               key={track.id}
-              className="rounded-lg border border-gray-200 p-4"
+              className="p-4 bg-neutral-950 border-neutral-800 space-y-2"
             >
               {/* TITLE + ACTION */}
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <p className="text-sm font-medium text-gray-900">
-                  {track.title}
-                </p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-medium text-neutral-100">{track.title}</p>
 
                 {isOwner && (
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="text-red-500"
                     onClick={() => deleteTrack(track.id)}
-                    className="text-xs text-red-500 hover:text-red-700 transition"
                   >
                     Remove
-                  </button>
+                  </Button>
                 )}
               </div>
 
@@ -128,51 +125,45 @@ export default function FeaturedTracks({
                   href={track.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-indigo-600 hover:underline"
+                  className="text-sm text-primary hover:underline"
                 >
                   Open track
                 </a>
               )}
-            </div>
+            </Card>
           );
         })}
       </div>
 
       {/* ADD TRACK */}
       {isOwner && (
-        <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-          <p className="mb-3 text-sm font-medium text-gray-900">
-            Add a featured track
-          </p>
+        <Card className="p-4 bg-neutral-950 border-neutral-800 space-y-3">
+          <p className="text-sm font-medium text-neutral-100">Add a featured track</p>
 
-          <div className="space-y-3">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Track title"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Track title"
+            className="w-full rounded-md border border-neutral-700 px-3 py-2 text-sm bg-neutral-950 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
 
-            <input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="SoundCloud / YouTube / Bandcamp URL"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="SoundCloud / YouTube / Bandcamp URL"
+            className="w-full rounded-md border border-neutral-700 px-3 py-2 text-sm bg-neutral-950 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
 
-            <button
-              onClick={() => addTrack.mutate()}
-              className="rounded-md bg-gradient-to-r from-indigo-500 to-purple-500
-                         px-4 py-2 text-sm font-medium text-white
-                         hover:opacity-90 transition"
-            >
-              Add track
-            </button>
-          </div>
-        </div>
+          <Button
+            variant="primary"
+            size="md"
+            className="w-full"
+            onClick={() => addTrack.mutate()}
+          >
+            Add track
+          </Button>
+        </Card>
       )}
-    </section>
+    </Card>
   );
 }

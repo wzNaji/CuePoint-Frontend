@@ -4,6 +4,8 @@ import axios from "axios";
 import { loginUser } from "../api/auth";
 import FormField from "../components/FormField";
 import Message from "../components/Message";
+import Card from "../components/Card";
+import Button from "../components/button";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -37,24 +39,40 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex justify-center py-20">
-      <div className="w-full max-w-md p-6 bg-white border rounded shadow">
-        <h1 className="text-2xl font-bold mb-4">Login</h1>
+    <div className="flex justify-center items-start py-20 min-h-screen bg-gray-900">
+      <Card className="w-full max-w-md p-6 bg-gray-800 border-gray-700 text-white">
+        <h1 className="text-2xl font-bold mb-6 text-white text-center">Login</h1>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-3">
-          <FormField type="email" placeholder="Email" value={email} onChange={setEmail} />
-          <FormField type="password" placeholder="Password" value={password} onChange={setPassword} />
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <FormField
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={setEmail}
+          />
+          <FormField
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={setPassword}
+          />
 
-          <button
+          <Button
             type="submit"
-            className="bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
+            variant="secondary"
+            size="md"
+            className=""
           >
             Login
-          </button>
+          </Button>
         </form>
 
-        {message && <Message text={message} success={success} />}
-      </div>
+        {message && (
+          <div className="mt-4">
+            <Message text={message} success={success} />
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

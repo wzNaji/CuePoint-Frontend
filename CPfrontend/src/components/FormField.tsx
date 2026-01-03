@@ -22,8 +22,8 @@ export default function FormField({
         onChange={(e) => onChange(e.target.value)}
         required
         className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 transition
-          ${error ? "border-red-400 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"}
-          bg-white text-gray-900`}
+          ${error ? "border-red-400 focus:ring-red-400" : "border-neutral-700 focus:ring-primary"}
+          bg-neutral-950 text-neutral-100`}
       />
       {error && (
         <p className="text-red-500 text-sm mt-1">{error}</p>
