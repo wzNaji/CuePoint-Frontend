@@ -1,27 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchCurrentUser } from "../api/auth";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 type FeatureBoxProps = {
   title: string;
-  text: string;
   bgImg?: string; // optional background image
 };
 
-function FeatureBox({ title, text, bgImg }: FeatureBoxProps) {
+function FeatureBox({ title, bgImg }: FeatureBoxProps) {
   return (
     <div
-      className="p-6 rounded-xl border border-red-500 shadow-sm 
-                 hover:shadow-[0_0_20px_6px_rgba(255,0,0,0.5)] 
-                 hover:-translate-y-1 transition-all duration-300 text-center 
-                 bg-cover bg-center text-white"
+      className="p-6 h-64 rounded-xl border border-red-500 shadow-sm
+           hover:shadow-[0_0_20px_6px_rgba(255,0,0,0.5)]
+           hover:-translate-y-1 transition-all duration-300
+           text-center bg-cover bg-center text-white
+           flex items-center justify-center"
+
       style={{ backgroundImage: `url('${bgImg || '/default-avatar.png'}')` }}
     >
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-200">{text}</p>
+      <h3 className="text-xl font-semibold bg-black/50 px-3 py-1 rounded-md">
+        {title}
+      </h3>
     </div>
   );
 }
+
 
 
 
@@ -41,7 +45,7 @@ export default function LandingPage() {
       {/* ================= HERO SECTION ================= */}
       <section
         className="relative h-screen w-full bg-cover bg-center"
-        style={{ backgroundImage: "url('/default-avatar.png')" }}
+        style={{ backgroundImage: "url('/CuePointLandingPageImg.png')" }}
       >
         {/* overlay */}
         <div className="absolute inset-0 bg-black/40" />
@@ -53,13 +57,23 @@ export default function LandingPage() {
               Welcome to CuePoint
             </h1>
 
-            <p className="text-gray-200 mb-8">
-              Discover DJs, manage bookings, and share your music with the world.
-            </p>
+            <h2 className="text-gray-200 mb-8 font-bold text-white tracking-wide">
+              Discover Artists, manage bookings, and share your music with the world.
+            </h2>
 
-            <button className="px-8 py-3 rounded-lg bg-primary text-white hover:bg-primary/90 transition">
-              Get Started
-            </button>
+            <div className="flex flex-col items-center mt-6 animate-bounce">
+            <svg
+              className="w-9 h-9 text-white"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-7 7-7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 12l-7 7-7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 17l-7 7-7-7" />
+            </svg>
+          </div>
           </div>
         </div>
       </section>
@@ -67,29 +81,16 @@ export default function LandingPage() {
       {/* ================= FEATURES SECTION ================= */}
       <section className="py-32 px-6 bg-gray-800">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <FeatureBox
-            title="Discover DJs"
-            text="Find DJs by genre, city, and availability."
-            bgImg="/images/dj-background.jpg"
-          />
-          <FeatureBox
-            title="Manage Bookings"
-            text="Handle bookings and schedules in one place."
-            bgImg="/images/bookings-background.jpg"
-          />
-          <FeatureBox
-            title="Share Your Music"
-            text="Upload mixes and grow your audience."
-            bgImg="/images/music-background.jpg"
-          />
-          <FeatureBox
-            title="Grow Your Network"
-            text="Connect with venues and event organizers."
-            bgImg="url('/default-avatar.png')"
-          />
-
+          <FeatureBox title="Discover Artists" bgImg="/Artist.png" />
+          <FeatureBox title="Manage Bookings" bgImg="/Booking.png" />
+          <FeatureBox title="Share Your Music" bgImg="/ShareMusic.png" />
+          <FeatureBox title="Grow Your Network" bgImg="/Networking.png" />
         </div>
       </section>
+      <div>
+        {/* ================= FOOTER ================= */}
+        <Footer />
+      </div>
     </div>
   );
 }
