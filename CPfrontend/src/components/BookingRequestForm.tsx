@@ -84,7 +84,7 @@ export default function BookingRequestForm({
 
         {/* Buttons */}
         <div className="space-y-2">
-          <Button type="submit" variant="primary" size="md" className="w-full">
+          <Button type="submit" variant="secondary" size="md" className="w-full">
             Send booking request
           </Button>
 
@@ -92,7 +92,7 @@ export default function BookingRequestForm({
             type="button"
             variant="secondary"
             size="md"
-            className="w-full"
+            className="w-full text-red-600"
             onClick={onCancel}
           >
             Cancel

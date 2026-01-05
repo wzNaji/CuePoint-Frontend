@@ -1,6 +1,5 @@
 import BookingRequestForm from "./BookingRequestForm";
 import Card from "./Card";
-import Button from "./button";
 
 interface BookingRequestModalProps {
   date: string;
@@ -38,16 +37,6 @@ export default function BookingRequestModal({
           }
           onCancel={onClose}
         />
-
-        {/* Close Button */}
-        <Button
-          onClick={onClose}
-          variant="secondary"
-          size="md"
-          className="w-full"
-        >
-          Close
-        </Button>
       </Card>
     </div>
   );

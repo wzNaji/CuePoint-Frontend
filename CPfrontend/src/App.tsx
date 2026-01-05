@@ -16,9 +16,7 @@ function App() {
       <Route
         path="/"
         element={
-          <AppLayout>
             <LandingPage />
-          </AppLayout>
         }
       />
       <Route
