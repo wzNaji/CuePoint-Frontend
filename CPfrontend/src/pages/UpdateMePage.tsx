@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api/auth";
+import { api } from "../api/axios";
+
+import Card from "../components/Card";
+import Button from "../components/button";
 
 interface UserOut {
   id: number;
   email: string;
   display_name: string;
+  bio?: string | null;
 }
 
 type Tab = "profile" | "password" | "delete";
@@ -14,233 +18,238 @@ export default function UpdateMePage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
-  // Profile state
-  const [email, setEmail] = useState("");
-  const [displayName, setDisplayName] = useState("");
-
-  // Password state
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-
-  // Delete account state
-  const [deletePassword, setDeletePassword] = useState("");
-
-  // Messages
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  // Fetch user
   const { data: user, isLoading } = useQuery<UserOut>({
     queryKey: ["me"],
-    queryFn: async () => {
-      const res = await api.get("/me");
-      return res.data;
-    },
+    queryFn: async () => (await api.get("/me")).data,
     retry: false,
   });
 
+  const [form, setForm] = useState<{
+    email: string;
+    display_name: string;
+    bio: string;
+  } | null>(null);
+
   useEffect(() => {
     if (user) {
-      setEmail(user.email);
-      setDisplayName(user.display_name);
+      setForm({
+        email: user.email,
+        display_name: user.display_name,
+        bio: user.bio || "",
+      });
     }
   }, [user]);
 
-  // ===== Mutations =====
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+
+  const [error, setError] = useState<any>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // ================= MUTATIONS =================
+
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: { email?: string; display_name?: string }) => {
-      const res = await api.put("/me", updates);
-      return res.data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["me"], data);
-      setSuccess("Profile updated successfully!");
+    mutationFn: async () =>
+      api.put("/me", {
+        email: form!.email,
+        display_name: form!.display_name,
+        bio: form!.bio || null,
+      }),
+    onSuccess: (res) => {
+      queryClient.setQueryData(["currentUser"], res.data);
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      setSuccess("Profile updated successfully");
       setError(null);
+      setTimeout(() => (window.location.href = "/dashboard"), 1500);
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Error updating profile");
+      setError(err.response?.data?.detail || "Update failed");
       setSuccess(null);
     },
   });
 
   const changePasswordMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.put("/me/password", {
+    mutationFn: async () =>
+      api.put("/me/password", {
         current_password: currentPassword,
         new_password: newPassword,
-      });
-      return res.data;
-    },
+      }),
     onSuccess: () => {
-      setSuccess("Password updated successfully!");
+      setSuccess("Password updated successfully");
       setError(null);
       setCurrentPassword("");
       setNewPassword("");
+      setTimeout(() => (window.location.href = "/dashboard"), 1500);
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Error changing password");
+      setError(err.response?.data?.detail || "Password change failed");
       setSuccess(null);
     },
   });
 
   const deleteAccountMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.delete("/me", { data: { password: deletePassword } });
-      return res.data;
-    },
+    mutationFn: async () =>
+      api.delete("/me", { data: { password: deletePassword } }),
     onSuccess: () => {
-      alert("Account deleted successfully!");
       window.location.href = "/login";
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Error deleting account");
+      setError(err.response?.data?.detail || "Delete failed");
       setSuccess(null);
     },
   });
 
-  if (isLoading) return <div>Loading user...</div>;
+  if (isLoading || !form) {
+    return <p className="p-6 text-white">Loading…</p>;
+  }
+
+  // ================= UI =================
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-4 text-center">Account Management</h1>
+    <div className="flex justify-center py-20">
+      <Card className="w-full max-w-md p-6 bg-gray-900 border-gray-800">
+        <h1 className="text-2xl font-bold text-white mb-4 text-center">
+          Account settings
+        </h1>
 
-      {/* Messages */}
-      {error && <div className="text-red-600 mb-4">{error}</div>}
-      {success && <div className="text-green-600 mb-4">{success}</div>}
+        {/* MESSAGES */}
+        {error && (
+          <p className="mb-4 text-sm text-red-500">
+            {Array.isArray(error)
+              ? error.map((e, i) => <div key={i}>{e.msg}</div>)
+              : error}
+          </p>
+        )}
 
-      {/* Tabs */}
-      <div className="flex mb-4 border-b">
-        {["profile", "password", "delete"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as Tab)}
-            className={`flex-1 py-2 text-center font-medium ${
-              activeTab === tab
-                ? "border-b-2 border-blue-500 text-blue-500"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+        {success && (
+          <p className="mb-4 text-sm text-green-500">{success}</p>
+        )}
+
+        {/* TABS */}
+        <div className="flex mb-6 border-b border-gray-800">
+          {(["profile", "password", "delete"] as Tab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-2 text-sm font-medium transition ${
+                activeTab === tab
+                  ? "text-red-500 border-b-2 border-red-500"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              {tab.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        {/* PROFILE */}
+        {activeTab === "profile" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateProfileMutation.mutate();
+            }}
+            className="space-y-4"
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {/* ===== Profile Tab ===== */}
-      {activeTab === "profile" && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            updateProfileMutation.mutate({ email, display_name: displayName });
-          }}
-        >
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Email</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
+              className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white"
+              value={form.email}
+              onChange={(e) =>
+                setForm((f) => ({ ...f!, email: e.target.value }))
+              }
+              placeholder="Email"
             />
-          </div>
 
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Display Name</label>
             <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
+              className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white"
+              value={form.display_name}
+              onChange={(e) =>
+                setForm((f) => ({ ...f!, display_name: e.target.value }))
+              }
+              placeholder="Display name"
             />
-          </div>
 
-          <button
-            type="submit"
-            disabled={updateProfileMutation.status === "pending"}
-            className={`w-full py-2 rounded text-white ${
-              updateProfileMutation.status === "pending"
-                ? "bg-blue-300 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600"
-            }`}
+            <textarea
+              rows={4}
+              className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white"
+              value={form.bio}
+              onChange={(e) =>
+                setForm((f) => ({ ...f!, bio: e.target.value }))
+              }
+              placeholder="Bio"
+            />
+
+            <Button type="submit" disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending ? "Updating…" : "Update profile"}
+            </Button>
+          </form>
+        )}
+
+        {/* PASSWORD */}
+        {activeTab === "password" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              changePasswordMutation.mutate();
+            }}
+            className="space-y-4"
           >
-            {updateProfileMutation.status === "pending" ? "Updating..." : "Update Profile"}
-          </button>
-        </form>
-      )}
-
-      {/* ===== Password Tab ===== */}
-      {activeTab === "password" && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            changePasswordMutation.mutate();
-          }}
-        >
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Current Password</label>
             <input
               type="password"
+              className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white"
+              placeholder="Current password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
             />
-          </div>
 
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">New Password</label>
             <input
               type="password"
+              className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white"
+              placeholder="New password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
             />
-          </div>
 
-          <button
-            type="submit"
-            disabled={changePasswordMutation.status === "pending"}
-            className={`w-full py-2 rounded text-white ${
-              changePasswordMutation.status === "pending"
-                ? "bg-blue-300 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600"
-            }`}
+            <Button type="submit" disabled={changePasswordMutation.isPending}>
+              {changePasswordMutation.isPending
+                ? "Changing…"
+                : "Change password"}
+            </Button>
+          </form>
+        )}
+
+        {/* DELETE */}
+        {activeTab === "delete" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!window.confirm("Delete your account permanently?")) return;
+              deleteAccountMutation.mutate();
+            }}
+            className="space-y-4"
           >
-            {changePasswordMutation.status === "pending" ? "Changing..." : "Change Password"}
-          </button>
-        </form>
-      )}
-
-      {/* ===== Delete Tab ===== */}
-      {activeTab === "delete" && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!window.confirm("Are you sure you want to delete your account?")) return;
-            deleteAccountMutation.mutate();
-          }}
-        >
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Password</label>
             <input
               type="password"
+              className="w-full rounded bg-gray-800 border border-gray-700 px-3 py-2 text-white"
+              placeholder="Confirm password"
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-red-400"
             />
-          </div>
 
-          <button
-            type="submit"
-            disabled={deleteAccountMutation.status === "pending"}
-            className={`w-full py-2 rounded text-white ${
-              deleteAccountMutation.status === "pending"
-                ? "bg-red-300 cursor-not-allowed"
-                : "bg-red-500 hover:bg-red-600"
-            }`}
-          >
-            {deleteAccountMutation.status === "pending" ? "Deleting..." : "Delete Account"}
-          </button>
-        </form>
-      )}
+            <Button
+              type="submit"
+              variant="secondary"
+              className="text-red-600 hover:text-red-700"
+              disabled={deleteAccountMutation.isPending}
+            >
+              {deleteAccountMutation.isPending
+                ? "Deleting…"
+                : "Delete account"}
+            </Button>
+          </form>
+        )}
+      </Card>
     </div>
   );
 }
