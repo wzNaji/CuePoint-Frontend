@@ -199,10 +199,15 @@ export default function EventsSidebar({
                       variant="secondary"
                       size="sm"
                       className="text-red-500 hover:text-red-600"
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deleteEvent(event.id);
+                      }}
                     >
                       Delete
                     </Button>
+
                   ) : (
                     <span className="invisible text-xs">Delete</span>
                   )}
