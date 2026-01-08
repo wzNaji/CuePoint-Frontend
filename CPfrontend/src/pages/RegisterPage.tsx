@@ -1,3 +1,14 @@
+/**
+ * RegisterPage.tsx
+ *
+ * Page for user registration.
+ *
+ * Features:
+ * - Collects email, display name, and password
+ * - Handles field validation and displays errors
+ * - Shows success or general messages
+ * - Redirects to login page upon successful registration
+ */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -8,11 +19,25 @@ import Message from "../components/Message";
 import Button from "../components/button";
 import Card from "../components/Card";
 
+/**
+ * RegisterPage Component
+ *
+ * Allows users to create a new account.
+ *
+ * @returns JSX.Element
+ */
+
 const RegisterPage = () => {
+  // ------------------------------
+  // Form state
+  // ------------------------------
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
 
+  // ------------------------------
+  // Field errors and messages
+  // ------------------------------
   const [emailError, setEmailError] = useState("");
   const [displayNameError, setDisplayNameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -20,6 +45,10 @@ const RegisterPage = () => {
   const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
+
+  /**
+   * Reset all error messages and success state
+   */
 
   const resetErrors = () => {
     setEmailError("");
@@ -29,6 +58,11 @@ const RegisterPage = () => {
     setSuccess(false);
   };
 
+  /**
+   * Handle user registration
+   *
+   * @param e - Form submission event
+   */
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     resetErrors();
@@ -41,6 +75,7 @@ const RegisterPage = () => {
       );
       setSuccess(true);
 
+      // Redirect to login page after 2 seconds
       setTimeout(() => navigate("/login"), 2000);
     } catch (error: unknown) {
       setSuccess(false);
@@ -48,6 +83,7 @@ const RegisterPage = () => {
       if (axios.isAxiosError(error) && error.response) {
         const status = error.response.status;
 
+        // Validation errors
         if (status === 422) {
           const details = error.response.data?.detail;
           if (Array.isArray(details)) {
@@ -74,6 +110,7 @@ const RegisterPage = () => {
     }
   };
 
+  // ================= UI =================
   return (
     <div className="flex justify-center py-20">
       <Card className="w-full max-w-md p-6 bg-gray-900 border-gray-800">
@@ -116,6 +153,7 @@ const RegisterPage = () => {
           </Button>
         </form>
 
+        {/* General message display */}
         {generalMessage && (
           <div className="mt-4">
             <Message text={generalMessage} success={success} />

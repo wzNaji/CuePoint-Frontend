@@ -1,3 +1,14 @@
+/**
+ * LoginPage.tsx
+ *
+ * Page for user login.
+ *
+ * Features:
+ * - Collects email and password
+ * - Handles authentication via API
+ * - Displays success or error messages
+ * - Redirects to dashboard on successful login
+ */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -7,14 +18,33 @@ import Message from "../components/Message";
 import Card from "../components/Card";
 import Button from "../components/button";
 
+/**
+ * LoginPage Component
+ *
+ * Renders login form and handles user authentication.
+ *
+ * @returns JSX.Element
+ */
 const LoginPage = () => {
+  // ------------------------------
+  // Form state
+  // ------------------------------
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // ------------------------------
+  // UI messages
+  // ------------------------------
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
 
+  /**
+   * Handle user login
+   *
+   * @param e - Form submission event
+   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
@@ -26,6 +56,7 @@ const LoginPage = () => {
       setMessage("Login successful!");
       setSuccess(true);
 
+      // Redirect to dashboard shortly after successful login
       setTimeout(() => navigate("/dashboard"), 800);
     } catch (error: unknown) {
       setSuccess(false);
@@ -38,6 +69,7 @@ const LoginPage = () => {
     }
   };
 
+  // ================= UI =================
   return (
     <div className="flex justify-center items-start py-20 min-h-screen bg-gray-900">
       <Card className="w-full max-w-md p-6 bg-gray-800 border-gray-700 text-white">

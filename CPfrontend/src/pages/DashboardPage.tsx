@@ -1,3 +1,17 @@
+/**
+ * DashboardPage.tsx
+ *
+ * Main dashboard for logged-in users.
+ *
+ * Features:
+ * - Displays user profile with profile image upload
+ * - Shows featured tracks
+ * - Shows user posts with create/edit/delete functionality
+ * - Sidebar with events
+ * - Logout functionality
+ *
+ * Uses React Query for data fetching and mutations.
+ */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,13 +36,20 @@ import {
 import type { Post } from "../types/post";
 import type { User } from "../types/user";
 
+/**
+ * DashboardPage Component
+ *
+ * Renders the main dashboard view for authenticated users.
+ */
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [message, setMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  // -------------------- Local State --------------------
+  const [message, setMessage] = useState(""); // Feedback message
+  const [uploading, setUploading] = useState(false); // Profile image upload indicator
+  const [editingPost, setEditingPost] = useState<Post | null>(null); // Post currently being edited
 
   // -------------------- Queries --------------------
   const { data: user, isLoading: userLoading } = useQuery<User | null>({
@@ -77,6 +98,7 @@ export default function DashboardPage() {
   }
 
   // -------------------- Handlers --------------------
+  /** Handle creation of a new post */
   const handleCreatePost = async (content: string, imageUrl: string) => {
     try {
       await createPostMutation.mutateAsync({ content, imageUrl });
@@ -86,6 +108,7 @@ export default function DashboardPage() {
     }
   };
 
+  /** Handle updating an existing post */
   const handleEditPost = async (content: string, imageUrl: string) => {
     if (!editingPost) return;
     try {
@@ -97,6 +120,7 @@ export default function DashboardPage() {
     }
   };
 
+  /** Handle deleting a post */
   const handleDeletePost = async (postId: number) => {
     try {
       await deletePostMutation.mutateAsync(postId);
@@ -106,6 +130,7 @@ export default function DashboardPage() {
     }
   };
 
+  /** Handle profile image file change and upload */
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -121,6 +146,7 @@ export default function DashboardPage() {
     }
   };
 
+  /** Handle user logout */
   const handleLogout = async () => {
     try {
       await logoutMutation.mutateAsync();
