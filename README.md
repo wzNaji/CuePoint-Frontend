@@ -1,4 +1,3 @@
-# Checkout "dev" Branch
 # CuePoint – Full Stack Booking & Profile Platform
 
 CuePoint is a full-stack web application designed for creative professionals (e.g. musicians, artists, venues) to manage public profiles, publish content, showcase featured media, and handle booking requests through a structured calendar-based workflow.
