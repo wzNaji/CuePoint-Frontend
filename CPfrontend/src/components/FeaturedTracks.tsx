@@ -24,7 +24,7 @@ export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps)
   const { data: tracks = [] } = useQuery<Track[]>({
     queryKey: ["featuredTracks", userId],
     queryFn: async () => {
-      const res = await api.get(`/featured-tracks?user_id=${userId}`);
+      const res = await api.get(`/featured-tracks/?user_id=${userId}`);
       return res.data;
     },
   });

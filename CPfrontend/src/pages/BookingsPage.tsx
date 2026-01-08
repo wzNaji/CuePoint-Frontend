@@ -22,6 +22,9 @@ export default function BookingsPage() {
   const [showReceived, setShowReceived] = useState(true);
   const [showRequested, setShowRequested] = useState(true);
 
+  /* ----------------------------
+     Current logged-in user
+  ----------------------------- */
   const { data: currentUser } = useQuery({
     queryKey: ["me"],
     queryFn: () => api.get("/me").then((res) => res.data),
@@ -30,20 +33,25 @@ export default function BookingsPage() {
   const currentUserId = currentUser?.id;
   const isOwnCalendar = currentUserId === calendarOwnerId;
 
-  const { data: calendarOwner } = useQuery({
-    queryKey: ["user", calendarOwnerId],
-    queryFn: () => api.get(`/users/${calendarOwnerId}`).then((res) => res.data),
-    enabled: !isNaN(calendarOwnerId),
-  });
-
-  const { data: bookings = [], isLoading, isError } = useQuery<Booking[]>({
+  /* ----------------------------
+     Fetch bookings
+  ----------------------------- */
+  const {
+    data: bookings = [],
+    isLoading,
+    isError,
+  } = useQuery<Booking[]>({
     queryKey: ["bookings"],
-    queryFn: () => api.get("/bookings").then((res) => res.data),
+    queryFn: () => api.get("/bookings/").then((res) => res.data),
     enabled: !!currentUserId,
   });
 
+  /* ----------------------------
+     Toggle defaults
+  ----------------------------- */
   useEffect(() => {
     if (!currentUserId || isNaN(calendarOwnerId)) return;
+
     if (isOwnCalendar) {
       setShowRequested(true);
       setShowReceived(true);
@@ -53,14 +61,26 @@ export default function BookingsPage() {
     }
   }, [isOwnCalendar, currentUserId, calendarOwnerId]);
 
+  /* ----------------------------
+     Filter bookings for calendar
+  ----------------------------- */
   const filteredBookings = bookings.filter((b) => {
     if (!currentUserId) return false;
+
     if (isOwnCalendar) {
-      return showRequested && (b.requester_id === currentUserId || b.recipient_id === currentUserId);
+      return (
+        showRequested &&
+        (b.requester_id === currentUserId ||
+          b.recipient_id === currentUserId)
+      );
     }
+
     return showReceived && b.recipient_id === calendarOwnerId;
   });
 
+  /* ----------------------------
+     Create booking
+  ----------------------------- */
   const createBookingMutation = useMutation({
     mutationFn: (data: {
       date: string;
@@ -69,7 +89,7 @@ export default function BookingsPage() {
       location?: string | null;
       note?: string | null;
       recipient_id: number;
-    }) => api.post("/bookings", data),
+    }) => api.post("/bookings/", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       setSelectedDate(null);
@@ -105,34 +125,34 @@ export default function BookingsPage() {
     <div className="space-y-6">
       {/* TOGGLE BUTTON */}
       <div className="flex flex-wrap gap-2">
-  {isOwnCalendar ? (
-    <Button
-      size="md"
-      onClick={() => setShowRequested((prev) => !prev)}
-      className={`px-4 py-2 rounded-lg text-md font-medium border transition
-        ${showRequested
-          ? "bg-red-700 text-white border-red-700" // highlighted state
-          : "bg-gray-800 text-red-600 border-gray-700 hover:bg-gray-700" // off state
-        }`}
-    >
-      Show All Requests (Sent & Received)
-    </Button>
-  ) : (
-    <Button
-      size="md"
-      onClick={() => setShowReceived((prev) => !prev)}
-      className={`px-4 py-2 rounded-lg text-md font-medium border transition
-        ${showReceived
-          ? "bg-red-700 text-white border-red-700" // highlighted
-          : "bg-gray-800 text-red-600 border-gray-700 hover:bg-gray-700" // off
-        }`}
-    >
-      Requests to: {calendarOwner?.display_name || "User"}
-    </Button>
-  )}
-</div>
-
-
+        {isOwnCalendar ? (
+          <Button
+            size="md"
+            onClick={() => setShowRequested((prev) => !prev)}
+            className={`px-4 py-2 rounded-lg text-md font-medium border transition
+              ${
+                showRequested
+                  ? "bg-red-700 text-white border-red-700"
+                  : "bg-gray-800 text-red-600 border-gray-700 hover:bg-gray-700"
+              }`}
+          >
+            Show All Requests (Sent & Received)
+          </Button>
+        ) : (
+          <Button
+            size="md"
+            onClick={() => setShowReceived((prev) => !prev)}
+            className={`px-4 py-2 rounded-lg text-md font-medium border transition
+              ${
+                showReceived
+                  ? "bg-red-700 text-white border-red-700"
+                  : "bg-gray-800 text-red-600 border-gray-700 hover:bg-gray-700"
+              }`}
+          >
+            Requests to this user
+          </Button>
+        )}
+      </div>
 
       {/* CALENDAR */}
       <Card className="p-4 bg-gray-900 border-gray-800">
@@ -143,7 +163,7 @@ export default function BookingsPage() {
         />
       </Card>
 
-      {/* BOOKING MODALS */}
+      {/* MODALS */}
       {selectedDate && (
         <BookingRequestModal
           date={selectedDate}
@@ -151,6 +171,7 @@ export default function BookingsPage() {
           onSubmit={handleSubmitRequest}
         />
       )}
+
       {selectedBooking && (
         <BookingDetailsModal
           booking={selectedBooking}

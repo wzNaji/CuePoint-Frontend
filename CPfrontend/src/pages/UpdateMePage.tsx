@@ -180,7 +180,7 @@ export default function UpdateMePage() {
               placeholder="Bio"
             />
 
-            <Button type="submit" disabled={updateProfileMutation.isPending}>
+            <Button type="submit" variant="secondary" disabled={updateProfileMutation.isPending}>
               {updateProfileMutation.isPending ? "Updating…" : "Update profile"}
             </Button>
           </form>
@@ -211,7 +211,7 @@ export default function UpdateMePage() {
               onChange={(e) => setNewPassword(e.target.value)}
             />
 
-            <Button type="submit" disabled={changePasswordMutation.isPending}>
+            <Button type="submit" variant="secondary" disabled={changePasswordMutation.isPending}>
               {changePasswordMutation.isPending
                 ? "Changing…"
                 : "Change password"}
