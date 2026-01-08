@@ -1,3 +1,17 @@
+/**
+ * EventsSidebar component
+ *
+ * Displays a list of upcoming events for a given user, with optional owner controls.
+ *
+ * Responsibilities:
+ * - Fetch events for `userId` (public endpoint)
+ * - Show upcoming events (date >= today)
+ * - If `isOwner` is true: allow adding and deleting events
+ * - Link each event to either its explicit URL or a fallback search (Resident Advisor)
+ *
+ * Data caching:
+ * - Uses React Query with the cache key: ["events", userId]
+ */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api/axios";
@@ -6,13 +20,21 @@ import Card from "./Card";
 import Message from "./Message";
 
 interface Event {
+  /** Database id for the event. */
   id: number;
+  /** Human-readable event title. */
   title: string;
+  /** ISO date string (YYYY-MM-DD). */
   date: string;
+  /** Optional location (not always displayed in UI here). */
   location?: string;
-  url?: string; // <- added
+  /** Optional external URL for the event (tickets/event page). */
+  url?: string;
 }
 
+/**
+ * Format a YYYY-MM-DD date string into a user-friendly label.
+ */
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("en-GB", {
     weekday: "short",
@@ -22,6 +44,9 @@ function formatDate(date: string) {
   });
 }
 
+/**
+ * Split a YYYY-MM-DD date string into display-friendly pieces for the UI badge.
+ */
 function getDateParts(date: string) {
   const d = new Date(date);
   return {
@@ -31,8 +56,11 @@ function getDateParts(date: string) {
 }
 
 interface EventsSidebarProps {
+  /** User id whose events should be shown. */
   userId: number;
+  /** Whether the current viewer is the owner (enables add/delete controls). */
   isOwner: boolean;
+  /** Max number of upcoming events to display (default: 5). */
   maxEvents?: number;
 }
 
@@ -43,6 +71,10 @@ export default function EventsSidebar({
 }: EventsSidebarProps) {
   const queryClient = useQueryClient();
 
+  /**
+   * Fetch events for the given user.
+   * The backend endpoint expects `user_id` as a query parameter.
+   */
   const { data: events = [] } = useQuery<Event[]>({
     queryKey: ["events", userId],
     queryFn: async () => {
@@ -51,35 +83,53 @@ export default function EventsSidebar({
     },
   });
 
+  // Local UI state for the "add event" form.
   const [showAdd, setShowAdd] = useState(false);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [url, setUrl] = useState("");
+
+  // Feedback banner state for success/error messages.
   const [message, setMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  /**
+   * Mutation for adding a new event (owner-only).
+   * On success, invalidate the events query so the list refreshes.
+   */
   const addEventMutation = useMutation({
     mutationFn: async () => {
       const res = await api.post("/events", { title, date, location: "", url });
       return res.data;
     },
     onSuccess: () => {
+      // Refresh the cached events list.
       queryClient.invalidateQueries({ queryKey: ["events", userId] });
+
+      // Reset form fields and close the form.
       setTitle("");
       setDate("");
       setUrl("");
       setShowAdd(false);
+
+      // Show success feedback briefly.
       setMessage("Event added successfully!");
       setSuccess(true);
       setTimeout(() => setMessage(null), 3000);
     },
     onError: () => {
+      // Show error feedback briefly.
       setMessage("Failed to add event.");
       setSuccess(false);
       setTimeout(() => setMessage(null), 3000);
     },
   });
 
+  /**
+   * Validates and submits the add-event form.
+   * - Requires title and date
+   * - Disallows dates in the past
+   */
   const handleAddEvent = () => {
     if (!title || !date) {
       setMessage("Please provide a title and date.");
@@ -88,6 +138,7 @@ export default function EventsSidebar({
       return;
     }
 
+    // Prevent adding events in the past.
     if (new Date(date) < new Date()) {
       setMessage("Events need to be in the future");
       setSuccess(false);
@@ -98,14 +149,20 @@ export default function EventsSidebar({
     addEventMutation.mutate();
   };
 
+  /**
+   * Delete an event by id (owner-only) and refresh the list.
+   */
   const deleteEvent = async (id: number) => {
     await api.delete(`/events/${id}`);
     queryClient.invalidateQueries({ queryKey: ["events", userId] });
   };
 
+  // Only show events that are today or later.
   const upcomingEvents = events.filter(
     (event) => new Date(event.date) >= new Date()
   );
+
+  // Limit how many we show in the sidebar.
   const displayedEvents = upcomingEvents.slice(0, maxEvents);
 
   return (
@@ -216,8 +273,11 @@ export default function EventsSidebar({
             </div>
           );
 
-          // Wrap in link if URL exists or fallback to Resident Advisor search
-          const linkUrl = event.url
+          /**
+           * Link behavior:
+           * - If the event has an explicit URL, use it.
+           * - Otherwise, fall back to a Resident Advisor search for the event title.
+           */          const linkUrl = event.url
             ? event.url
             : `https://www.residentadvisor.net/events.aspx?search=${encodeURIComponent(
                 event.title

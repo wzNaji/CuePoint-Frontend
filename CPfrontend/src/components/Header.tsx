@@ -1,3 +1,20 @@
+/**
+ * Header component
+ *
+ * Top navigation bar shown across the app.
+ *
+ * Responsibilities:
+ * - Provide brand/home navigation
+ * - Render the global search input
+ * - Show auth-aware actions:
+ *   - If logged in: Dashboard, Logout, and profile avatar
+ *   - If logged out: Login and Sign up
+ *
+ * Data flow:
+ * - Uses `useCurrentUser()` (React Query hook) to determine auth state
+ * - Uses a React Query mutation to call logout, then invalidates cached user data
+ */
+
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SearchBar from "./SearchBar";
@@ -8,8 +25,16 @@ import { logout } from "../api/dashboard";
 export default function Header() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Current authenticated user (or null) + loading state.
   const { data: currentUser, isLoading } = useCurrentUser();
 
+  /**
+   * Logout mutation:
+   * - Calls the backend logout endpoint (clears auth cookie)
+   * - Invalidates the current user query so the UI updates immediately
+   * - Redirects to the login screen
+   */
   const logoutMutation = useMutation({
     mutationFn: () => logout(),
     onSuccess: () => {
@@ -18,6 +43,7 @@ export default function Header() {
     },
   });
 
+  // Triggers the logout mutation.
   const handleLogout = () => {
     logoutMutation.mutate();
   };
@@ -25,7 +51,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 bg-neutral-950/80 backdrop-blur border-b border-neutral-800">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Left */}
+        {/* Left: brand/home navigation */}
         <h1
           onClick={() => navigate("/")}
           className="group text-xl font-extrabold tracking-tight cursor-pointer transition duration-300"
@@ -38,17 +64,19 @@ export default function Header() {
           </span>
         </h1>
 
-        {/* Center */}
+        {/* Center: global user search */}
         <div className="relative w-full max-w-md mx-6">
           <SearchBar placeholder="Search DJs..." />
         </div>
 
-        {/* Right */}
+        {/* Right: auth-aware actions */}
         <div className="flex items-center gap-3">
+          {/* Avoid rendering auth actions until auth state is known */}
           {!isLoading && (
             <>
               {currentUser ? (
                 <>
+                  {/* Logged-in actions */}
                   <Button
                     variant="secondary"
                     size="md"
@@ -66,6 +94,7 @@ export default function Header() {
                     Logout
                   </Button>
 
+                  {/* Profile avatar navigates to the user's public profile */}
                   <img
                     src={currentUser.profile_image_url || "/default-avatar.png"}
                     onClick={() => navigate(`/profiles/${currentUser.id}`)}
@@ -76,6 +105,7 @@ export default function Header() {
                 </>
               ) : (
                 <>
+                  {/* Logged-out actions */}
                   <Button
                     variant="secondary"
                     size="md"
