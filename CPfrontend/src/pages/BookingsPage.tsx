@@ -1,3 +1,16 @@
+/**
+ * BookingsPage.tsx
+ *
+ * Page for viewing and managing bookings for a given user.
+ *
+ * Features:
+ * - Displays a booking calendar
+ * - Allows requesting bookings for other users
+ * - Shows details for selected bookings
+ * - Toggle between received/sent bookings (for own calendar)
+ *
+ * Uses React Query for fetching and mutating booking data.
+ */
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,11 +24,17 @@ import Card from "../components/Card";
 import { api } from "../api/axios";
 import type { Booking } from "../types/booking";
 
+/**
+ * BookingsPage Component
+ *
+ * Displays a user's booking calendar and allows creating/viewing bookings.
+ */
 export default function BookingsPage() {
   const { userId } = useParams<{ userId: string }>();
-  const calendarOwnerId = Number(userId);
+  const calendarOwnerId = Number(userId); // Numeric ID of the calendar being viewed
   const queryClient = useQueryClient();
 
+  // -------------------- Local State --------------------
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
@@ -92,15 +111,18 @@ export default function BookingsPage() {
     }) => api.post("/bookings/", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      setSelectedDate(null);
+      setSelectedDate(null); // Close modal after successful creation
     },
   });
 
+  // -------------------- Handlers --------------------
+  /** Handle selecting a date on the calendar */
   const handleSelectDate = (date: string) => {
     setSelectedBooking(null);
     setSelectedDate(date);
   };
 
+  /** Handle submitting a new booking request */
   const handleSubmitRequest = (data: {
     date: string;
     start_time?: string;
@@ -118,9 +140,11 @@ export default function BookingsPage() {
     });
   };
 
+  // -------------------- Loading / Error States --------------------
   if (isLoading) return <p className="p-6 text-white">Loading bookings...</p>;
   if (isError) return <p className="p-6 text-white">Failed to load bookings.</p>;
 
+  // -------------------- JSX --------------------
   return (
     <div className="space-y-6">
       {/* TOGGLE BUTTON */}

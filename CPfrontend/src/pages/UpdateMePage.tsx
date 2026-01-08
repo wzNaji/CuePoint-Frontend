@@ -1,3 +1,16 @@
+/**
+ * UpdateMePage.tsx
+ *
+ * Page for users to manage their account settings.
+ * 
+ * Features:
+ * - Update profile info (email, display name, bio)
+ * - Change password
+ * - Delete account
+ * 
+ * Uses React Query for data fetching/mutations, TailwindCSS for styling,
+ * and a tab interface for switching between actions.
+ */
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/axios";
@@ -5,6 +18,9 @@ import { api } from "../api/axios";
 import Card from "../components/Card";
 import Button from "../components/button";
 
+/**
+ * Type definition for the current user.
+ */
 interface UserOut {
   id: number;
   email: string;
@@ -12,24 +28,35 @@ interface UserOut {
   bio?: string | null;
 }
 
+/** Tabs available on the settings page */
 type Tab = "profile" | "password" | "delete";
 
+/**
+ * UpdateMePage Component
+ *
+ * Handles user account updates: profile info, password, and account deletion.
+ * 
+ * @returns JSX.Element
+ */
 export default function UpdateMePage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
+  /** Fetch current user data */
   const { data: user, isLoading } = useQuery<UserOut>({
     queryKey: ["me"],
     queryFn: async () => (await api.get("/me")).data,
     retry: false,
   });
 
+  /** Form state for profile updates */
   const [form, setForm] = useState<{
     email: string;
     display_name: string;
     bio: string;
   } | null>(null);
 
+  /** Sync fetched user data into form state */
   useEffect(() => {
     if (user) {
       setForm({
@@ -40,15 +67,18 @@ export default function UpdateMePage() {
     }
   }, [user]);
 
+  /** Password state for password change and deletion */
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
 
+  /** UI feedback */
   const [error, setError] = useState<any>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   // ================= MUTATIONS =================
 
+  /** Update profile info mutation */
   const updateProfileMutation = useMutation({
     mutationFn: async () =>
       api.put("/me", {
@@ -69,6 +99,7 @@ export default function UpdateMePage() {
     },
   });
 
+  /** Change password mutation */
   const changePasswordMutation = useMutation({
     mutationFn: async () =>
       api.put("/me/password", {
@@ -88,6 +119,7 @@ export default function UpdateMePage() {
     },
   });
 
+  /** Delete account mutation */
   const deleteAccountMutation = useMutation({
     mutationFn: async () =>
       api.delete("/me", { data: { password: deletePassword } }),

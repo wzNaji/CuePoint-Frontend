@@ -1,3 +1,12 @@
+/**
+ * AppLayout.tsx
+ *
+ * Global layout wrapper for pages.
+ * Includes a consistent Header, Footer, and main content area.
+ *
+ * Props:
+ * - children: React.ReactNode — the page-specific content to render within the layout
+ */
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 

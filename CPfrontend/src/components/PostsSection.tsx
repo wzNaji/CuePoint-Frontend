@@ -1,3 +1,20 @@
+/**
+ * PostsSection component
+ *
+ * Renders a list of posts ("Updates") and, when the viewer is the owner,
+ * provides controls for:
+ * - creating a new post
+ * - editing an existing post (inline)
+ * - deleting a post
+ *
+ * This component is intentionally "dumb" about data fetching:
+ * - it receives posts + loading state from the parent
+ * - it receives handler callbacks for create/edit/delete from the parent
+ *
+ * Owner rules:
+ * - `isOwner` controls whether create + edit/delete actions are shown.
+ */
+
 // src/components/PostsSection.tsx
 import PostForm from "./PostForm";
 import Button from "./button";
@@ -5,16 +22,50 @@ import Card from "./Card";
 import type { Post } from "../types/post";
 
 interface PostsSectionProps {
+  /** List of posts to render (already fetched by the parent). */
   posts: Post[];
+
+  /** Loading flag for posts fetch. */
   postsLoading: boolean;
+
+  /**
+   * The post currently being edited (if any).
+   * When set, the matching post row swaps into an inline PostForm.
+   */
   editingPost: Post | null;
+
+  /** Setter used to start/stop editing a specific post. */
   setEditingPost: (post: Post | null) => void;
+
+  /**
+   * Create handler (called by PostForm).
+   * Parent is responsible for persisting via API and refreshing the list.
+   */
   handleCreatePost: (content: string, imageUrl: string) => void;
+
+  /**
+   * Edit handler (called by PostForm).
+   * Parent is responsible for persisting via API and refreshing the list.
+   */
   handleEditPost: (content: string, imageUrl: string) => void;
+
+  /**
+   * Delete handler (called when user clicks Delete).
+   * Parent is responsible for persisting via API and refreshing the list.
+   */
   handleDeletePost: (postId: number) => void;
+
+  /** Whether an image upload is currently in progress (disables submit buttons). */
   uploading: boolean;
+
+  /** Setter to toggle upload loading state (passed down to PostForm). */
   setUploading: (value: boolean) => void;
-  isOwner?: boolean; // NEW
+
+  /**
+   * Whether the current viewer is the owner of the profile/dashboard.
+   * If false, creation and edit/delete controls are hidden.
+   */
+  isOwner?: boolean;
 }
 
 export default function PostsSection({
@@ -27,14 +78,14 @@ export default function PostsSection({
   handleDeletePost,
   uploading,
   setUploading,
-  isOwner = false, // default false
+  isOwner = false, // default false for safety when omitted
 }: PostsSectionProps) {
   return (
     <section className="space-y-6">
-      {/* HEADER */}
+      {/* Section header */}
       <h2 className="text-lg font-semibold text-gray-900">Updates</h2>
 
-      {/* CREATE (only for owner) */}
+      {/* Create form only visible to the owner */}
       {isOwner && (
         <Card>
           <PostForm
@@ -45,10 +96,10 @@ export default function PostsSection({
         </Card>
       )}
 
-      {/* LOADING */}
+      {/* Loading state */}
       {postsLoading && <p className="text-sm text-gray-500">Loading updates…</p>}
 
-      {/* EMPTY */}
+      {/* Empty state (different text depending on ownership) */}
       {!postsLoading && posts.length === 0 && (
         <p className="text-sm text-gray-500">
           {isOwner
@@ -57,10 +108,11 @@ export default function PostsSection({
         </p>
       )}
 
-      {/* POSTS */}
+      {/* Posts list */}
       <div className="space-y-4">
         {posts.map((post) => (
           <Card key={post.id}>
+            {/* If this post is currently being edited (and viewer is owner), show inline edit form */}
             {editingPost?.id === post.id && isOwner ? (
               <PostForm
                 initialContent={post.content}
@@ -72,10 +124,12 @@ export default function PostsSection({
               />
             ) : (
               <>
-                {/* CONTENT */}
-                <p className="text-sm text-gray-900 whitespace-pre-line">{post.content}</p>
+                {/* Post content */}
+                <p className="text-sm text-gray-900 whitespace-pre-line">
+                  {post.content}
+                </p>
 
-                {/* IMAGE */}
+                {/* Optional post image */}
                 {post.image_url && (
                   <div className="mt-3 overflow-hidden rounded-lg border">
                     <img
@@ -86,13 +140,13 @@ export default function PostsSection({
                   </div>
                 )}
 
-                {/* META & ACTIONS */}
+                {/* Footer row: created timestamp + owner actions */}
                 <div className="mt-3 flex items-center justify-between">
                   <p className="text-xs text-gray-400">
                     {new Date(post.created_at).toLocaleString()}
                   </p>
 
-                  {/** ACTIONS ONLY FOR OWNER */}
+                  {/* Edit/Delete controls only available to the owner */}
                   {isOwner && (
                     <div className="flex items-center gap-2">
                       <Button

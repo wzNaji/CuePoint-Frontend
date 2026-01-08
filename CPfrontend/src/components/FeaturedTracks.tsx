@@ -1,3 +1,17 @@
+/**
+ * FeaturedTracks component
+ *
+ * Displays a user's featured tracks and renders media embeds when possible.
+ * Owners can add new tracks and remove existing ones.
+ *
+ * Data fetching/caching:
+ * - Uses React Query with cache key: ["featuredTracks", userId]
+ *
+ * Embed behavior:
+ * - Uses `getEmbedType` + `getEmbedUrl` to determine whether a URL can be embedded
+ *   (SoundCloud / YouTube / Bandcamp) or should be shown as a plain link.
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api/axios";
@@ -6,21 +20,32 @@ import Button from "./button";
 import Card from "./Card";
 
 interface Track {
+  /** Database id for the featured track record. */
   id: number;
+  /** Display title shown in the UI. */
   title: string;
+  /** Original URL provided by the user (SoundCloud/YouTube/Bandcamp/etc.). */
   url: string;
 }
 
 interface FeaturedTracksProps {
+  /** User id whose featured tracks should be displayed. */
   userId: number;
+  /** Whether the current viewer is the owner (enables add/remove controls). */
   isOwner: boolean;
 }
 
 export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps) {
   const queryClient = useQueryClient();
+
+  // Controlled inputs for the "add track" form.
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
 
+  /**
+   * Fetch featured tracks for the given user.
+   * The backend endpoint expects `user_id` as a query parameter.
+   */
   const { data: tracks = [] } = useQuery<Track[]>({
     queryKey: ["featuredTracks", userId],
     queryFn: async () => {
@@ -29,6 +54,10 @@ export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps)
     },
   });
 
+  /**
+   * Mutation for adding a track (owner-only).
+   * On success, invalidates the list query so the UI refreshes.
+   */
   const addTrack = useMutation({
     mutationFn: async () => {
       const res = await api.post("/featured-tracks", { title, url });
@@ -41,6 +70,9 @@ export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps)
     },
   });
 
+  /**
+   * Delete a featured track by id (owner-only) and refresh the list.
+   */
   const deleteTrack = async (id: number) => {
     await api.delete(`/featured-tracks/${id}`);
     queryClient.invalidateQueries({ queryKey: ["featuredTracks", userId] });
@@ -48,22 +80,25 @@ export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps)
 
   return (
     <Card className="mb-6 space-y-6 bg-neutral-900 border-neutral-800 text-neutral-100 p-6">
-      {/* HEADER */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold flex items-center gap-2">
-          🎧 <span>Featured Tracks</span>
+          <span>Featured Tracks</span>
         </h2>
       </div>
 
-      {/* EMPTY STATE */}
+      {/* Empty state */}
       {tracks.length === 0 && (
         <p className="text-sm text-neutral-400">No featured tracks yet.</p>
       )}
 
-      {/* TRACKS */}
+      {/* Track list */}
       <div className="space-y-6">
         {tracks.map((track) => {
+          // Determine which embed type (if any) the URL supports.
           const type = getEmbedType(track.url);
+
+          // Convert the original URL into an embeddable URL where applicable.
           const embedUrl = getEmbedUrl(track.url);
 
           return (
@@ -71,7 +106,7 @@ export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps)
               key={track.id}
               className="p-4 bg-neutral-950 border-neutral-800 space-y-2"
             >
-              {/* TITLE + ACTION */}
+              {/* Title + owner action */}
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-medium text-neutral-100">{track.title}</p>
 
@@ -87,7 +122,11 @@ export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps)
                 )}
               </div>
 
-              {/* EMBEDS */}
+              {/* Embeds:
+                  - SoundCloud uses a smaller player height
+                  - YouTube uses standard video embed sizing
+                  - Bandcamp uses the provided embed URL directly
+                  - Unknown types fall back to an external link */}
               {type === "soundcloud" && embedUrl && (
                 <iframe
                   width="100%"
@@ -135,7 +174,7 @@ export default function FeaturedTracks({ userId, isOwner }: FeaturedTracksProps)
         })}
       </div>
 
-      {/* ADD TRACK */}
+      {/* Add track form (owner-only) */}
       {isOwner && (
         <Card className="p-4 bg-neutral-950 border-neutral-800 space-y-3">
           <p className="text-sm font-medium text-neutral-100">Add a featured track</p>

@@ -1,10 +1,30 @@
+/**
+ * BookingRequestForm component
+ *
+ * Small controlled form for creating a booking request on a specific date.
+ *
+ * Responsibilities:
+ * - Collect start/end time, fee, location, and note
+ * - Validate that the selected date is not in the past
+ * - Emit a normalized payload to the parent via `onSubmit`
+ *
+ * Notes:
+ * - `date` is expected in "YYYY-MM-DD" format (from the calendar selection).
+ * - The backend expects snake_case keys (`start_time`, `end_time`, `image_url`, etc.),
+ *   so this form keeps those names to avoid extra mapping.
+ */
 import { useState } from "react";
 import Button from "./button";
 import Card from "./Card";
 import Message from "./Message";
 
 interface BookingRequestFormProps {
-  date: string; // YYYY-MM-DD
+  /** Selected date in YYYY-MM-DD format. */
+  date: string; 
+   /**
+   * Called when the form is submitted with valid data.
+   * Parent is responsible for sending the request to the backend.
+   */
   onSubmit: (data: {
     date: string;
     start_time?: string;
@@ -13,6 +33,8 @@ interface BookingRequestFormProps {
     location?: string;
     note?: string;
   }) => void;
+
+  /** Called when the user cancels the form. */
   onCancel: () => void;
 }
 
@@ -21,17 +43,21 @@ export default function BookingRequestForm({
   onSubmit,
   onCancel,
 }: BookingRequestFormProps) {
+  // Controlled field state.
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("21:00");
   const [fee, setFee] = useState<number | undefined>();
   const [location, setLocation] = useState("");
   const [note, setNote] = useState("");
+
+  // Local validation / feedback state.
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // validate date on submit
+    // Validate that the requested booking date is not in the past.
+    // The time is normalized to midnight to ensure a date-only comparison.
     const selected = new Date(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -43,6 +69,7 @@ export default function BookingRequestForm({
 
     setError(null);
 
+    // Normalize/clean values before submitting.
     onSubmit({
       date,
       start_time: startTime,
@@ -59,6 +86,7 @@ export default function BookingRequestForm({
         {/* Error message */}
         {error && <Message text={error} />}
 
+        {/* Start time (HH:mm). */}
         <input
           type="time"
           value={startTime}
@@ -66,6 +94,7 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
+        {/* End time (HH:mm). */}
         <input
           type="time"
           value={endTime}
@@ -73,6 +102,7 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
+        {/* Optional fee (non-negative). */}
         <input
           type="number"
           placeholder="Fee"
@@ -84,6 +114,7 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
+        {/* Optional location (free text). */}
         <input
           type="text"
           placeholder="Location"
@@ -92,6 +123,7 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
+          {/* Optional note (free text). */}
         <textarea
           placeholder="Note"
           value={note}
@@ -99,6 +131,7 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
+          {/* Actions */}
         <div className="space-y-2">
           <Button type="submit" variant="secondary" size="md" className="w-full">
             Send booking request
