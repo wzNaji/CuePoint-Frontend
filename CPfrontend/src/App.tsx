@@ -1,3 +1,20 @@
+/**
+ * App.tsx
+ *
+ * Defines the main routes for the React application using React Router v6.
+ * 
+ * Wraps pages that require the global layout (`AppLayout`) and defines
+ * the landing page without a layout.
+ *
+ * Routes:
+ * - "/"                  → LandingPage (no layout)
+ * - "/login"             → LoginPage (with AppLayout)
+ * - "/register"          → RegisterPage (with AppLayout)
+ * - "/dashboard"         → DashboardPage (with AppLayout)
+ * - "/users/:userId/bookings" → BookingsPage (with AppLayout)
+ * - "/me/update"         → UpdateMePage (with AppLayout)
+ * - "/profiles/:userId"  → ProfilePage (with AppLayout)
+ */
 import { Routes, Route } from "react-router-dom";
 import AppLayout from "./layouts/AppLayout";
 
@@ -8,6 +25,14 @@ import DashboardPage from "./pages/DashboardPage";
 import BookingsPage from "./pages/BookingsPage";
 import UpdateMePage from "./pages/UpdateMePage";
 import ProfilePage from "./pages/ProfilePage";
+
+/**
+ * App component
+ *
+ * Returns the main <Routes> tree for the application.
+ *
+ * @returns JSX.Element
+ */
 
 function App() {
   return (

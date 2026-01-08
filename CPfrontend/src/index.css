@@ -1,2 +1,8 @@
+/* 
+  index.css - TailwindCSS entry point
+
+  This file imports TailwindCSS and its default styles.
+  Using @import "tailwindcss" to include all Tailwind base, components, and utilities.
+*/
 @import "tailwindcss";
 

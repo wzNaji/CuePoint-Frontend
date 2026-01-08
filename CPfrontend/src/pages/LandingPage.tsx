@@ -1,13 +1,35 @@
+/**
+ * LandingPage.tsx
+ *
+ * Main landing page for CuePoint.
+ *
+ * Features:
+ * - Hero section with welcome message
+ * - Feature boxes highlighting platform capabilities
+ * - Header and Footer components
+ *
+ * Uses React Query to fetch the current user (for potential personalization).
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { fetchCurrentUser } from "../api/auth";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
+/** Props for the FeatureBox component */
 type FeatureBoxProps = {
   title: string;
   bgImg?: string; // optional background image
 };
 
+/**
+ * FeatureBox Component
+ *
+ * Displays a feature with a title and optional background image.
+ *
+ * @param title - Text title of the feature
+ * @param bgImg - Optional background image URL
+ */
 function FeatureBox({ title, bgImg }: FeatureBoxProps) {
   return (
     <div
@@ -26,10 +48,17 @@ function FeatureBox({ title, bgImg }: FeatureBoxProps) {
   );
 }
 
-
-
-
+/**
+ * LandingPage Component
+ *
+ * Main entry page for users visiting CuePoint.
+ *
+ * @returns JSX.Element
+ */
 export default function LandingPage() {
+  // ------------------------------
+  // Fetch current user (for potential personalization)
+  // ------------------------------
   const { isLoading } = useQuery({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
@@ -37,6 +66,7 @@ export default function LandingPage() {
 
   if (isLoading) return <p>Loading...</p>;
 
+  // ================= UI =================
   return (
     <div className="w-full">
       {/* ================= HEADER ================= */}

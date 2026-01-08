@@ -1,3 +1,17 @@
+/**
+ * ProfilePage.tsx
+ *
+ * Displays a public user profile.
+ *
+ * Features:
+ * - Shows profile info (display name, bio, profile image)
+ * - Lists user's posts
+ * - Displays featured tracks
+ * - Includes events sidebar
+ *
+ * Uses React Query for fetching profile and posts.
+ * All profile interactions (update, bookings, etc.) are disabled for public view.
+ */
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/axios";
@@ -5,6 +19,8 @@ import FeaturedTracks from "../components/FeaturedTracks";
 import EventsSidebar from "../components/EventsSidebar";
 import ProfileCard from "../components/ProfileCard";
 
+
+/** Type representing a user post */
 interface Post {
   id: number;
   content: string;
@@ -12,6 +28,7 @@ interface Post {
   created_at: string;
 }
 
+/** Type representing a public user profile */
 interface PublicProfile {
   id: number;
   display_name: string;
@@ -19,11 +36,24 @@ interface PublicProfile {
   profile_image_url?: string;
 }
 
+/**
+ * ProfilePage Component
+ *
+ * Fetches and displays a public user profile, their posts, featured tracks, and events.
+ *
+ * @returns JSX.Element
+ */
 export default function ProfilePage() {
+  // ------------------------------
+  // URL params and navigation
+  // ------------------------------
   const { userId } = useParams<{ userId: string }>();
   const numericUserId = userId ? Number(userId) : undefined;
   const navigate = useNavigate();
 
+  // ------------------------------
+  // Fetch profile data
+  // ------------------------------
   const { data: profile, isLoading: profileLoading } = useQuery<PublicProfile>({
     queryKey: ["profile", numericUserId],
     queryFn: async () => {
@@ -34,6 +64,9 @@ export default function ProfilePage() {
     enabled: !!numericUserId,
   });
 
+  // ------------------------------
+  // Fetch user's posts
+  // ------------------------------
   const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
     queryKey: ["profilePosts", numericUserId],
     queryFn: async () => {
@@ -44,6 +77,9 @@ export default function ProfilePage() {
     enabled: !!numericUserId,
   });
 
+  // ------------------------------
+  // Loading & error handling
+  // ------------------------------
   if (profileLoading) {
     return <p className="p-6 text-white">Loading profile...</p>;
   }
@@ -51,7 +87,9 @@ export default function ProfilePage() {
   if (!profile) {
     return <p className="p-6 text-white">Profile not found.</p>;
   }
-
+  // ------------------------------
+  // Main UI
+  // ------------------------------
   return (
     <div className="min-h-screen bg-gray-900 p-6 text-white">
       <div className="max-w-7xl mx-auto flex gap-6">
