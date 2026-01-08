@@ -62,7 +62,7 @@ export default function BookingDetailsModal({
           <div className="mt-6 flex gap-2">
             <Button
               className="flex-1"
-              variant="primary"
+              variant="secondary"
               onClick={() => updateStatus("accepted")}
             >
               Accept

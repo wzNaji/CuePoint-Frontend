@@ -46,7 +46,7 @@ export default function EventsSidebar({
   const { data: events = [] } = useQuery<Event[]>({
     queryKey: ["events", userId],
     queryFn: async () => {
-      const res = await api.get(`/events?user_id=${userId}`);
+      const res = await api.get(`/events/?user_id=${userId}`);
       return res.data;
     },
   });

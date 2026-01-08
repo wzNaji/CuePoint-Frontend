@@ -1,10 +1,12 @@
 import { useState } from "react";
 import Button from "./button";
 import Card from "./Card";
+import Message from "./Message";
 
 interface BookingRequestFormProps {
-  date: string;
+  date: string; // YYYY-MM-DD
   onSubmit: (data: {
+    date: string;
     start_time?: string;
     end_time?: string;
     fee?: number;
@@ -15,6 +17,7 @@ interface BookingRequestFormProps {
 }
 
 export default function BookingRequestForm({
+  date,
   onSubmit,
   onCancel,
 }: BookingRequestFormProps) {
@@ -23,24 +26,39 @@ export default function BookingRequestForm({
   const [fee, setFee] = useState<number | undefined>();
   const [location, setLocation] = useState("");
   const [note, setNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // validate date on submit
+    const selected = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selected < today) {
+      setError("You cannot request a booking for a past date.");
+      return;
+    }
+
+    setError(null);
+
+    onSubmit({
+      date,
+      start_time: startTime,
+      end_time: endTime,
+      fee,
+      location: location.trim() || "Unknown Location",
+      note,
+    });
+  };
 
   return (
     <Card className="space-y-4 bg-neutral-900 border-neutral-800 text-neutral-100">
-      {/* Form */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit({
-            start_time: startTime,
-            end_time: endTime,
-            fee,
-            location: location.trim() || "Unknown Location",
-            note,
-          });
-        }}
-        className="space-y-4"
-      >
-        {/* Start Time */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Error message */}
+        {error && <Message text={error} />}
+
         <input
           type="time"
           value={startTime}
@@ -48,7 +66,6 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
-        {/* End Time */}
         <input
           type="time"
           value={endTime}
@@ -56,16 +73,17 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
-        {/* Fee */}
         <input
           type="number"
           placeholder="Fee"
+          min={0}
           value={fee ?? ""}
-          onChange={(e) => setFee(Number(e.target.value))}
+          onChange={(e) =>
+            setFee(e.target.value ? Number(e.target.value) : undefined)
+          }
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
-        {/* Location */}
         <input
           type="text"
           placeholder="Location"
@@ -74,7 +92,6 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
-        {/* Note */}
         <textarea
           placeholder="Note"
           value={note}
@@ -82,12 +99,10 @@ export default function BookingRequestForm({
           className="w-full border border-neutral-700 p-3 rounded-lg bg-neutral-950 text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
 
-        {/* Buttons */}
         <div className="space-y-2">
           <Button type="submit" variant="secondary" size="md" className="w-full">
             Send booking request
           </Button>
-
           <Button
             type="button"
             variant="secondary"
