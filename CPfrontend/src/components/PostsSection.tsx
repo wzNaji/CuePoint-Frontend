@@ -125,7 +125,7 @@ export default function PostsSection({
             ) : (
               <>
                 {/* Post content */}
-                <p className="text-sm text-gray-900 whitespace-pre-line">
+                <p className="text-sm text-white whitespace-pre-line">
                   {post.content}
                 </p>
 
